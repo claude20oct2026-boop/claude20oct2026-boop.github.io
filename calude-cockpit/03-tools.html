@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools for Claude</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --bad:#b3261e; --bad-soft:#fbe7e5;
+    --blue:#2a5db0; --blue-soft:#e4ecfa; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+      --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+    --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+  a{color:var(--accent)}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px;font-size:.9em;overflow-wrap:anywhere}
+  h2{font-size:clamp(24px,3.4vw,30px);line-height:1.2;margin:0 0 6px}
+  h3{font-size:18px;margin:0 0 6px;line-height:1.3}
+  p{margin:0 0 10px}
+  .lines span{display:block}
+  .muted{color:var(--muted)}
+
+  /* hero */
+  .hero{position:relative;border-radius:0 0 22px 22px;overflow:hidden;color:#fff;margin:0 -16px;min-height:340px;display:flex;align-items:flex-end}
+  .mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr)}
+  .mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.25) 0%,rgba(10,10,10,.82) 70%)}
+  .hero-text{position:relative;z-index:1;padding:40px 28px 30px;max-width:780px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#ffb59a}
+  .hero h1{font-size:clamp(30px,5.4vw,50px);line-height:1.08;margin:8px 0 12px}
+  .hero p{font-size:18px;color:#eee;margin:0}
+
+  /* section nav */
+  .snav{position:sticky;top:0;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;margin-bottom:8px}
+  .snav a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:14px;font-weight:600;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+  .snav a:hover{border-color:var(--accent)}
+  section{padding:40px 0 4px;scroll-margin-top:56px}
+  .intro{color:var(--muted);font-size:17px;margin-bottom:16px}
+  .intro code,.howto-steps li>span code{white-space:nowrap}
+
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .stack .box{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 24px;align-items:start}
+  .stack .box>h3{margin:2px 0 0}
+  .stack .box p:last-child{margin-bottom:0}
+  .small{font-size:14px}
+  p,li,.lines span,.what,.example,.flag{text-wrap:pretty}
+  .cmd{overflow-wrap:normal;word-break:normal;white-space:pre-wrap}
+
+  .tip{background:var(--ok-soft);border-color:transparent}
+  .warnbox{background:var(--warn-soft);border-color:transparent}
+  .badbox{background:var(--bad-soft);border-color:transparent}
+  ul.clean{margin:6px 0 0;padding-left:20px}
+  ul.clean li{margin:4px 0}
+
+  /* trust levels */
+  .level{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+  .lv-anthropic{background:var(--ok-soft);color:var(--ok)}
+  .lv-official{background:var(--blue-soft);color:var(--blue)}
+  .lv-community{background:var(--warn-soft);color:var(--warn)}
+
+  /* gallery */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 16px}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:99px;cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .controls input{flex:1 1 200px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+  .count{font-size:14px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+  .pic{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#c4552d,#7a3cc4)}
+  .pic.business{background:linear-gradient(135deg,#2a5db0,#2f7d4f)}
+  .pic.productivity{background:linear-gradient(135deg,#9a6a00,#c4552d)}
+  .pic.gaming{background:linear-gradient(135deg,#5b2bb0,#0f8a9e)}
+  .rating{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+  .lv-top{background:var(--accent);color:#fff}
+  .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  .cat{position:absolute;top:10px;left:10px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.62);color:#fff;backdrop-filter:blur(4px)}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:17px;font-weight:700;color:var(--accent);margin:0}
+  .by{font-size:13px;color:var(--muted);margin:-4px 0 2px}
+  .what{margin:0}
+  .flag{font-size:13px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:8px;padding:4px 9px}
+  .get{font-size:13px;margin-top:2px;padding-top:6px;border-top:1px solid var(--line)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .card{position:relative}
+  .example{font-size:14px;line-height:1.45;background:var(--code);border-radius:8px;padding:8px 10px}
+  .example b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  /* Instructions: closed by default. They drop down while the mouse is on the panel (or after a tap). */
+  .guide{border:1px dashed var(--line);border-radius:10px;transition:border-color .15s}
+  .guide-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+  .guide-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:9px}
+  .guide-toggle .chev{margin-left:auto;flex:none;transition:transform .2s}
+  .tap-label{display:none}
+  @media (hover:none){ .hover-label{display:none} .tap-label{display:inline} }
+  .guide-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+  .guide-inner{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s linear .22s}
+  .guide.open{border-color:var(--accent);border-style:solid}
+  .guide.open .guide-body{grid-template-rows:1fr}
+  .guide.open .guide-inner{visibility:visible;transition-delay:0s}
+  .guide.open .chev{transform:rotate(180deg)}
+  @media (hover:hover){
+    .guide:hover{border-color:var(--accent);border-style:solid}
+    .guide:hover .guide-body{grid-template-rows:1fr;transition-delay:.12s}
+    .guide:hover .guide-inner{visibility:visible;transition-delay:.12s}
+    .guide:hover .chev{transform:rotate(180deg)}
+  }
+  ol.howto-steps{margin:0 10px;padding:10px 2px 12px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45}
+  ol.howto-steps li::marker{font-weight:700;color:var(--accent)}
+  ol.howto-steps li>b{display:block;margin-bottom:3px}
+  ol.howto-steps li>span{display:block;text-wrap:pretty}
+  .small-hint{font-size:12px;color:var(--muted);margin-top:5px}
+  .cmdrow.prompt code{font-family:inherit;font-size:13px}
+  .cmdrow{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 8px;margin-top:4px}
+  .cmdrow code{flex:1;min-width:0;background:none;padding:0;font-size:12px;line-height:1.45;overflow-wrap:break-word;word-break:normal}
+  .stepno{flex:none;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;display:grid;place-items:center}
+  .cp{flex:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .cp:hover{border-color:var(--accent);color:var(--accent)}
+  .cp.ok{color:var(--ok);border-color:var(--ok)}
+  .cp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .install-what{font-size:13px;margin-top:8px;line-height:1.4}
+  .install-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  /* steps */
+  ol.steps{margin:6px 0 0;padding-left:22px}
+  ol.steps li{margin:6px 0}
+  .cmd{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px;overflow-wrap:anywhere}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 4px}
+  .quote{border-left:3px solid var(--bad);padding:4px 0 4px 12px;margin:10px 0;font-style:italic}
+  .quote cite{display:block;font-size:13px;font-style:normal;color:var(--muted)}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+  footer{margin-top:50px;color:var(--muted);font-size:14px}
+  button:focus-visible,.snav a:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:640px){
+    .stack .box{grid-template-columns:1fr}
+    .g4{grid-template-columns:1fr}
+    .cmd{overflow-wrap:anywhere}
+    .mosaic{grid-template-columns:repeat(3,1fr)}
+    .hero-text{padding:28px 18px 22px}
+  }
+  @media print{ .guide-toggle{display:none} .guide-body{grid-template-rows:1fr} .guide-inner{visibility:visible} .snav,.controls{display:none} .hero{color:#000;min-height:0}.hero::after,.mosaic{display:none} .hero p{color:#333} .eyebrow{color:var(--accent)} .card{break-inside:avoid} }
+
+  /* pages 03 and 04 */
+  .name{font-family:inherit;font-size:19px}
+  .lv-free{background:var(--ok-soft);color:var(--ok)}
+  .pic.everyday{background:linear-gradient(135deg,#0f8a9e,#2f7d4f)}
+  .tools .box h3{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;color:var(--accent);margin-bottom:4px}
+  .tools .box p{margin:0;font-size:15px}
+  .grid.tools{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="mosaic" id="mosaic" aria-hidden="true"></div>
+  <div class="hero-text">
+    <div class="eyebrow">Lesson one &middot; Topic 3</div>
+    <h1>Tools: give Claude hands</h1>
+    <p class="lines">
+      <span>Skills teach Claude how to do a job. Tools let Claude act.</span>
+      <span>Browse, search, publish and build, right from Claude Code.</span>
+    </p>
+  </div>
+</header>
+
+<nav class="snav" aria-label="Sections">
+  <a href="#what">What is a tool</a>
+  <a href="#builtin">Built-in tools</a>
+  <a href="#find">Where to find</a>
+  <a href="#gallery">15 tools</a>
+  <a href="#add">Add</a>
+  <a href="#use">Use</a>
+  <a href="#remove">Remove</a>
+  <a href="#safe">Stay safe</a>
+  <a href="#try">Try it</a>
+</nav>
+
+<!-- WHAT -->
+<section id="what">
+  <h2>What is a tool?</h2>
+  <div class="grid g3">
+    <div class="box">
+      <h3>A tool</h3>
+      <p class="lines">
+        <span>An action Claude can take.</span>
+        <span>Read a file, search the web, click a button.</span>
+        <span>Claude picks the right tool for each step.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>An MCP server</h3>
+      <p class="lines">
+        <span>A package of tools from another company.</span>
+        <span>MCP is a standard plug for AI tools.</span>
+        <span>Most arrive inside a plugin, ready to use.</span>
+      </p>
+    </div>
+    <div class="box tip">
+      <h3>Skill, tool or connector?</h3>
+      <p class="lines">
+        <span>A skill is know-how: how to do a job.</span>
+        <span>A tool is hands: something Claude can do.</span>
+        <span>A connector is a key to your accounts.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- BUILT-IN -->
+<section id="builtin">
+  <h2>Tools Claude Code already has</h2>
+  <p class="intro">You don't install these. They come with Claude Code.</p>
+  <div class="grid g3 tools">
+    <div class="box"><h3>Read</h3><p>Opens and reads your files.</p></div>
+    <div class="box"><h3>Edit and Write</h3><p>Changes files and creates new ones.</p></div>
+    <div class="box"><h3>Bash and PowerShell</h3><p>Runs commands on your computer.</p></div>
+    <div class="box"><h3>WebSearch</h3><p>Searches the internet.</p></div>
+    <div class="box"><h3>WebFetch</h3><p>Reads one web page.</p></div>
+    <div class="box"><h3>Glob and Grep</h3><p>Finds files, and words inside files.</p></div>
+    <div class="box"><h3>Agent</h3><p>Sends a helper to work on part of the job.</p></div>
+    <div class="box"><h3>AskUserQuestion</h3><p>Asks you a multiple-choice question.</p></div>
+    <div class="box"><h3>Task list</h3><p>Keeps a checklist of its own work.</p></div>
+  </div>
+  <div class="box tip" style="margin-top:14px">
+    <h3>See it for yourself</h3>
+    <p class="lines">
+      <span>Ask Claude: "Which tools can you use right now?"</span>
+      <span>Claude asks you before tools that change things. That is the permission prompt.</span>
+    </p>
+  </div>
+</section>
+
+<!-- FIND -->
+<section id="find">
+  <h2>Where to find tools</h2>
+  <p class="intro">Start at the top of this list. The further down, the more carefully you check.</p>
+  <div class="grid g4">
+    <div class="box">
+      <span class="level lv-anthropic">Reviewed by Anthropic</span>
+      <h3>Anthropic's connectors directory</h3>
+      <p class="lines">
+        <span>Tools and connectors that Anthropic has reviewed.</span>
+        <span>Page: <a href="https://claude.com/connectors" target="_blank" rel="noopener">claude.com/connectors</a></span>
+        <span>Each page shows who made it and its address.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-official">Trusted directory, still check</span>
+      <h3>The official plugin marketplace</h3>
+      <p class="lines">
+        <span>Anthropic's plugin catalog, built into Claude Code.</span>
+        <span>Many tools come from the tool's own company.</span>
+        <span>Open it: <code>/plugins</code> in VS Code, <code>/plugin</code> in the terminal.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-official">Official, still check</span>
+      <h3>The tool maker's website</h3>
+      <p class="lines">
+        <span>Most companies explain how to connect their tool.</span>
+        <span>Look for "MCP" or "Claude" in their help pages.</span>
+        <span>Use the company's own page, not a copy.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">Check before installing</span>
+      <h3>Community lists</h3>
+      <p class="lines">
+        <span>Hundreds of MCP servers made by people everywhere.</span>
+        <span>List: <a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">modelcontextprotocol/servers</a></span>
+        <span>Great ideas, but anyone can publish there.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <h2>15 tools worth knowing</h2>
+  <p class="intro">Some are pure wow. Some do real business work.</p>
+  <p class="intro lines" style="margin-top:-10px"><span>Examples use the practice files in the <code>03-tool-files</code> folder.</span><span>Under each example there is a small instructions panel.</span><span>Hover over it to see how to add and try the tool.</span><span>On a phone or tablet, tap the panel instead.</span></p>
+  <div class="controls">
+    <div id="filters" role="group" aria-label="Filter by type"></div>
+    <button class="chip" type="button" id="onlyBtn" aria-pressed="false"></button>
+    <input id="q" type="search" placeholder="Search, e.g. browser, website, maps" aria-label="Search">
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="muted lines" style="margin-top:14px;font-size:14px"><span>The badge on each card shows where it comes from. Red notes are things to know first.</span><span>Each copy button copies one line. Run numbered lines in order.</span></p>
+</section>
+
+<!-- ADD -->
+<section id="add">
+  <h2>How to add a tool</h2>
+  <p class="intro">Three ways. The first one is the easiest.</p>
+  <div class="stack">
+    <div class="box">
+      <h3>1. As a plugin</h3>
+      <div>
+        <ol class="steps">
+          <li>In the Claude Code box, type <code>/plugins</code>.</li>
+          <li>Search for the tool on the <b>Plugins</b> tab.</li>
+          <li>Click <b>Install</b>, then choose <b>Install for you</b>.</li>
+          <li>If it needs an account, type <code>/mcp</code>, choose it, and sign in.</li>
+        </ol>
+        <p class="label">In the terminal</p>
+        <span class="cmd">/plugin install playwright@claude-plugins-official</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>2. From the /mcp menu</h3>
+      <p class="lines">
+        <span>Type <code>/mcp</code> in the VS Code panel and add a server.</span>
+        <span>Paste the tool's address, from its directory page or website.</span>
+        <span>Then choose it in <code>/mcp</code> and sign in, if it asks.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>3. In the terminal</h3>
+      <div>
+        <p class="lines"><span>For people who use the Claude Code command line:</span></p>
+        <span class="cmd">claude mcp add --transport http notion https://mcp.notion.com/mcp</span>
+        <p class="muted small">The VS Code panel and the terminal share the same list of tools.</p>
+      </div>
+    </div>
+    <div class="box tip">
+      <h3>Did it work?</h3>
+      <p class="lines">
+        <span>Start a new chat and type <code>/mcp</code>.</span>
+        <span>Your tool should say <b>Connected</b>.</span>
+        <span>It says it needs sign-in? Choose it and sign in.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- USE -->
+<section id="use">
+  <h2>How to use a tool</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Just ask</h3>
+      <div>
+        <p class="lines">
+          <span>Claude picks the right tool by itself.</span>
+          <span>Naming the tool makes it more reliable:</span>
+        </p>
+        <span class="cmd">Use Playwright to open wikipedia.org and take a screenshot.</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Your own browser</h3>
+      <div>
+        <p class="lines"><span>With Claude in Chrome, start your request with <code>@browser</code>.</span></p>
+        <span class="cmd">@browser open my Gmail and count today's unread emails.</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Approve each action</h3>
+      <p class="lines">
+        <span>Claude asks before a tool changes something.</span>
+        <span>Read the request, then allow it or say no.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- REMOVE -->
+<section id="remove">
+  <h2>How to remove or turn off a tool</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Remove a plugin</h3>
+      <div>
+        <p class="lines">
+          <span>VS Code: type <code>/plugins</code>, find the plugin, and uninstall it.</span>
+          <span>Terminal:</span>
+        </p>
+        <span class="cmd">/plugin uninstall playwright@claude-plugins-official</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Turn it off for now</h3>
+      <p class="lines">
+        <span>Type <code>/mcp</code>, choose the tool, and disable it.</span>
+        <span>It stays installed, but Claude can't use it.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Remove a server you added</h3>
+      <div>
+        <p class="lines"><span>Remove it in the <code>/mcp</code> menu, or in the terminal:</span></p>
+        <span class="cmd">claude mcp remove notion</span>
+      </div>
+    </div>
+    <div class="box warnbox">
+      <h3>Good habit</h3>
+      <p class="lines"><span>Remove tools you don't use. Each one adds risk and cost.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- SAFE -->
+<section id="safe">
+  <h2>Stay safe: tools can act for you</h2>
+  <p class="intro">A tool can click, publish, send and buy. Treat it like a new employee.</p>
+  <div class="quote">"Verify you trust each server before connecting it. Servers that fetch external content can expose you to prompt injection risk."<cite>Claude Code documentation, MCP</cite></div>
+  <div class="quote">"A Claude Code plugin you install can execute arbitrary code on your machine with your user privileges."<cite>Claude Code documentation, plugin security</cite></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="box badbox">
+      <h3>Watch out for</h3>
+      <ul class="clean">
+        <li>Web pages with hidden instructions for AI. This is called prompt injection.</li>
+        <li>A tool that asks you to paste a password or key into the chat.</li>
+        <li>Tools that publish, send or pay without asking you first.</li>
+        <li>An unknown author, with no users and no history.</li>
+        <li>A copy of a famous tool under a slightly different name.</li>
+      </ul>
+    </div>
+    <div class="box tip">
+      <h3>Before you add a tool: 5 checks</h3>
+      <ol class="steps">
+        <li><b>Who made it?</b> Anthropic, the tool's company, or a stranger?</li>
+        <li><b>What can it do?</b> Read its list of tools in <code>/mcp</code>.</li>
+        <li><b>Which account?</b> Try it with a test account first.</li>
+        <li><b>Keep approvals on.</b> Let Claude ask before each action.</li>
+        <li><b>Practice first.</b> Use practice files, not real client data.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="stack" style="margin-top:14px">
+    <div class="box">
+      <h3>Your browser is signed in</h3>
+      <p class="lines"><span>@browser uses your real Chrome, with your logins.</span><span>Claude can see what those websites show you.</span></p>
+    </div>
+    <div class="box">
+      <h3>Published means public</h3>
+      <p class="lines"><span>Anyone with the link can open a site or app you publish.</span><span>Never publish customer data or private numbers.</span></p>
+    </div>
+    <div class="box">
+      <h3>At work</h3>
+      <p class="lines"><span>Ask IT before adding tools on a work computer.</span><span>Companies can allow or block tools for everyone.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- TRY -->
+<section id="try">
+  <h2>Try it yourself: add, use, remove</h2>
+  <p class="intro">About 15 minutes. Use the <code>03-tool-files</code> folder. You need Node.js.</p>
+  <div class="box">
+    <ol class="steps">
+      <li>Open <code>03-tool-files</code> in VS Code and open Claude Code.</li>
+      <li>Type <code>/plugins</code>. Find <b>playwright</b> and install it for you.</li>
+      <li>Start a new chat and type <code>/mcp</code>. Does playwright say Connected?</li>
+      <li>Ask:
+        <span class="cmd">Use Playwright to open https://demo.playwright.dev/todomvc and add the 4 action items from meeting-notes.txt as to-dos. Then take a screenshot.</span>
+        Watch the browser while Claude works.
+      </li>
+      <li>Ask:
+        <span class="cmd">Which tools did you just use? Explain in 3 short lines.</span>
+      </li>
+      <li>Remove it: open <code>/plugins</code> and uninstall <b>playwright</b>.</li>
+      <li>Start a new chat and type <code>/mcp</code> again. Is playwright gone?</li>
+    </ol>
+    <p class="label">Working in the terminal instead?</p>
+    <span class="cmd">/plugin install playwright@claude-plugins-official</span>
+    <span class="cmd">/plugin uninstall playwright@claude-plugins-official</span>
+    <details><summary>Check yourself</summary>
+      <div class="lines" style="margin-top:6px">
+        <span>In step 4 a browser opens and types 4 to-dos by itself.</span>
+        <span>The to-dos come from Avi, Galit and Ronit's action items.</span>
+        <span>In step 5 Claude names Read for the file, and Playwright's browser tools.</span>
+        <span>After step 6, playwright is gone from <code>/mcp</code>.</span>
+      </div>
+    </details>
+  </div>
+  <div class="box tip" style="margin-top:14px">
+    <h3>Summary</h3>
+    <p class="lines">
+      <span>Tools are Claude's hands: browsers, search, publishing and more.</span>
+      <span>Add them as plugins, check them in /mcp, and remove what you don't use.</span>
+      <span>Trust reviewed sources first, and keep approvals on.</span>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p class="lines">
+    <span>Sources: Claude Code documentation (MCP, Chrome, tools reference), <a href="https://github.com/anthropics/claude-plugins-official" target="_blank" rel="noopener">claude-plugins-official</a> and <a href="https://claude.com/connectors" target="_blank" rel="noopener">claude.com/connectors</a>.</span>
+    <span>Tool names and plugins change often. Check them again before each class.</span>
+    <span>Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</span>
+  </p>
+</footer>
+</div>
+
+<script>
+/* Each card is generated from ITEMS. Edit the data here, not the rendered HTML.
+   src: "anthropic" = made by Anthropic, "vendor" = made by the tool's own company, "official" = in Anthropic's official marketplace.
+   install/remove: lines with copy buttons. lead/hint/gets: text around them. files: practice files the example uses. */
+const IMG = id => "https://images.unsplash.com/photo-" + id + "?w=640&h=400&q=70&auto=format&fit=crop";
+const FOLDER = "03-tool-files";
+const ITEMS = [
+{"name": "Claude in Chrome", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1499951360447-b19be8fe80f5", "what": "Lets Claude use your own Chrome browser: open pages, click, type and read.", "flag": "Needs a paid Claude plan. Claude can use sites you are signed in to.", "prompt": "@browser open Google Maps and find 5 office-supply stores near Times Square in New York. Put them in a table with their ratings.", "see": "Chrome opens a new tab and searches by itself. Then a table appears in the chat.", "files": [], "step2": "Add it to Chrome", "install": ["https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn"], "lead": "Add the Claude extension to Chrome, then sign in with your Claude account.", "hint": "In VS Code, type <b>@browser</b> before your request. Type <b>/chrome</b> to check the connection.", "remove": ["chrome://extensions"], "removeLead": "Open this address in Chrome and remove the Claude extension.", "url": "https://code.claude.com/docs/en/chrome", "urlLabel": "Read the guide"},
+{"name": "Playwright", "by": "Microsoft", "src": "vendor", "cat": "wow", "img": "1516321318423-f06f85e504b3", "what": "Gives Claude its own browser to click, type and take screenshots.", "flag": "Needs Node.js on your computer.", "prompt": "Use Playwright to open https://demo.playwright.dev/todomvc and add the 4 action items from meeting-notes.txt as to-dos. Then take a screenshot.", "see": "A browser window opens and types the 4 to-dos while you watch. Then Claude shows you the screenshot.", "files": ["meeting-notes.txt"], "install": ["/plugin install playwright@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>playwright</b>.", "gets": "Adds Microsoft's browser tools. No account needed.", "remove": ["/plugin uninstall playwright@claude-plugins-official"], "url": "https://github.com/microsoft/playwright-mcp"},
+{"name": "Netlify", "by": "Netlify", "src": "vendor", "cat": "wow", "img": "1498050108023-c5249f4df085", "what": "Publishes a website to the internet and gives you a link to share.", "flag": "Needs a free Netlify account. The site will be public.", "prompt": "Use Netlify to publish the site folder as a new website. Give me the link.", "see": "A live web address ending in netlify.app. Open it on your phone to see the site.", "files": ["site/index.html"], "install": ["/plugin install netlify-skills@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>netlify-skills</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Netlify's tools and skills.", "remove": ["/plugin uninstall netlify-skills@claude-plugins-official"], "url": "https://github.com/netlify/context-and-tools"},
+{"name": "Lovable", "by": "Lovable", "src": "vendor", "cat": "wow", "img": "1551650975-87deedd944c3", "what": "Builds complete web apps from a description, ready to use and share.", "flag": "Needs a Lovable account. Free plans have limits.", "prompt": "Use Lovable to build a simple app where our team logs customer complaints and sees the top issues. Use customer-feedback.txt as sample data.", "see": "A new Lovable project with a preview link. Open it and try adding a complaint.", "files": ["customer-feedback.txt"], "install": ["/plugin install lovable@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>lovable</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Lovable's app-building tools.", "remove": ["/plugin uninstall lovable@claude-plugins-official"], "url": "https://github.com/lovablelabs/mcp"},
+{"name": "Hugging Face", "by": "Hugging Face", "src": "vendor", "cat": "wow", "img": "1620712943543-bcc4688e7485", "what": "Finds and uses free AI models and apps from the Hugging Face community.", "flag": "Needs a free Hugging Face account.", "prompt": "Use Hugging Face to find the 3 most popular free apps that remove photo backgrounds. Give me their names and links.", "see": "3 AI apps with short descriptions, and links you can try in your browser.", "files": [], "install": ["/plugin install huggingface-skills@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>huggingface-skills</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Hugging Face's tools and skills.", "remove": ["/plugin uninstall huggingface-skills@claude-plugins-official"], "url": "https://github.com/huggingface/skills"},
+{"name": "Telegram", "by": "Claude plugin directory", "src": "official", "cat": "wow", "img": "1512428559087-560fa5ceab42", "what": "Lets you message your Claude Code session from your phone, through Telegram.", "flag": "Advanced. Terminal only. Needs Bun and your own Telegram bot.", "prompt": "What are the top 3 complaints in customer-feedback.txt? Answer in 3 short lines.", "askTitle": "From your phone, message your bot", "see": "Claude answers you in Telegram, using the files on your computer.", "files": ["customer-feedback.txt"], "install": ["/plugin install telegram@claude-plugins-official", "/telegram:configure YOUR_BOT_TOKEN", "claude --channels plugin:telegram@claude-plugins-official"], "lead": "First make a bot: in Telegram, message @BotFather and send /newbot. Then run these in order.", "hint": "Line 3 restarts Claude Code in the terminal. Message your bot, then pair it with <b>/telegram:access pair</b> and the code it sends.", "remove": ["/plugin uninstall telegram@claude-plugins-official"], "url": "https://github.com/anthropics/claude-plugins-official/tree/main/external_plugins/telegram"},
+{"name": "Mapbox", "by": "Mapbox", "src": "vendor", "cat": "wow", "img": "1524661135-423995f22d0b", "what": "Works with maps: places, routes, driving times and map images.", "flag": "Needs a free Mapbox account.", "prompt": "Use Mapbox to find the driving time and distance between Tel Aviv, Haifa and Beersheba. Show the route on a map.", "see": "Driving times and distances in a table, and a map image of the route.", "files": [], "install": ["/plugin install mapbox@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>mapbox</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Mapbox's map tools and skills.", "remove": ["/plugin uninstall mapbox@claude-plugins-official"], "url": "https://github.com/mapbox/mapbox-agent-skills"},
+{"name": "Synthflow", "by": "Synthflow", "src": "vendor", "cat": "business", "img": "1534536281715-e28d76689b4d", "what": "Builds AI phone agents that answer calls and talk to customers.", "flag": "Needs a Synthflow account. Real phone calls can cost money.", "prompt": "Use Synthflow to create a phone receptionist for Greenleaf that answers the questions in faq.txt. Don't connect a phone number yet.", "see": "A new voice agent in your Synthflow account. You can test it there by talking to it.", "files": ["faq.txt"], "install": ["/plugin install synthflow@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>synthflow</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Synthflow's voice-agent tools.", "remove": ["/plugin uninstall synthflow@claude-plugins-official"], "url": "https://github.com/SynthFlowAI/AnthropicPlugin"},
+{"name": "Exa", "by": "Exa", "src": "vendor", "cat": "business", "img": "1457369804613-52c61a468e7d", "what": "Searches the web for fresh, high-quality sources, with links.", "prompt": "Use Exa to find 5 recent articles about office-supply prices and delivery problems. Summarize them in a table with links.", "see": "A table of 5 articles, with a one-line summary and a link for each.", "files": [], "install": ["/plugin install exa@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>exa</b>.", "gets": "Adds Exa's web search and research tools.", "remove": ["/plugin uninstall exa@claude-plugins-official"], "url": "https://github.com/exa-labs/exa-mcp-server"},
+{"name": "Firecrawl", "by": "Firecrawl", "src": "vendor", "cat": "business", "img": "1526374965328-7f61d4dc18c5", "what": "Reads whole web pages and turns them into clean text and tables.", "flag": "Needs a free Firecrawl account.", "prompt": "Use Firecrawl to read the Wikipedia pages about Staples Inc. and Office Depot. Compare the two companies in a table.", "see": "A comparison table: when they started, where they are based, size and main business.", "files": [], "install": ["/plugin install firecrawl@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>firecrawl</b>. Then type <b>/mcp</b>, choose it, and sign in.", "gets": "Adds Firecrawl's web reading tools.", "remove": ["/plugin uninstall firecrawl@claude-plugins-official"], "url": "https://github.com/firecrawl/firecrawl-claude-plugin"},
+{"name": "Chrome DevTools", "by": "Google Chrome team", "src": "vendor", "cat": "business", "img": "1504639725590-34d0984388bd", "what": "Checks a website's speed and errors, the way web developers do.", "flag": "Needs Node.js and Google Chrome.", "prompt": "Use Chrome DevTools to check how fast https://www.wikipedia.org loads. Explain the result and the 3 biggest slowdowns in plain words.", "see": "Chrome opens the site by itself. Then you get the load time and simple tips.", "files": [], "install": ["/plugin install chrome-devtools-mcp@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>chrome-devtools-mcp</b>.", "gets": "Adds Chrome's developer tools. No account needed.", "remove": ["/plugin uninstall chrome-devtools-mcp@claude-plugins-official"], "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp"},
+{"name": "receipts", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1554224155-6726b3ff858f", "what": "Makes a receipt-style report of what you did with Claude Code.", "prompt": "/receipts week", "see": "Two files in your home folder: a report to paste into a document, and a receipt page.", "files": [], "install": ["/plugin install receipts@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>receipts</b>.", "gets": "Adds the /receipts command. Nothing is published.", "remove": ["/plugin uninstall receipts@claude-plugins-official"], "url": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/receipts"},
+{"name": "Context7", "by": "Upstash", "src": "vendor", "cat": "productivity", "img": "1532012197267-da84d127e765", "what": "Gives Claude the latest manuals for software tools, so its code works.", "prompt": "Use context7 to check the latest Chart.js documentation. Then build a chart page from sales.csv and save it as sales-chart.html.", "see": "A chart page in your browser, built with the current version of Chart.js.", "files": ["sales.csv"], "install": ["/plugin install context7@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>context7</b>.", "gets": "Adds Context7's documentation lookup.", "remove": ["/plugin uninstall context7@claude-plugins-official"], "url": "https://github.com/upstash/context7"},
+{"name": "claude-code-setup", "by": "Anthropic", "src": "anthropic", "cat": "productivity", "img": "1581091226825-a6a2a5aee158", "what": "Looks at your folder and recommends tools, skills and automations for it.", "prompt": "Recommend automations for this folder. Keep it to the top 3, in plain words.", "see": "A short list of suggested tools and skills, and why each one helps. It changes nothing.", "files": [], "install": ["/plugin install claude-code-setup@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>claude-code-setup</b>.", "gets": "Adds a read-only advisor skill.", "remove": ["/plugin uninstall claude-code-setup@claude-plugins-official"], "url": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/claude-code-setup"},
+{"name": "session-report", "by": "Anthropic", "src": "anthropic", "cat": "productivity", "img": "1460925895917-afdab827c52f", "what": "Makes an interactive report of your Claude Code use: tokens, skills and costly prompts.", "flag": "Needs Node.js on your computer.", "prompt": "Use the session-report skill to make a report of my Claude Code use in the last 7 days.", "see": "An HTML report in this folder. Open it to see where your usage went.", "files": [], "install": ["/plugin install session-report@claude-plugins-official"], "lead": "Type this in Claude Code.", "hint": "In the VS Code panel: type <b>/plugins</b> and install <b>session-report</b>.", "gets": "Adds the session-report skill.", "remove": ["/plugin uninstall session-report@claude-plugins-official"], "url": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/session-report"}
+];
+
+const CATS = {"all": "All", "wow": "Wow & fun", "business": "Business", "productivity": "Productivity"};
+const CAT_LABEL = {"wow": "Wow & fun", "business": "Business", "productivity": "Productivity"};
+const SRC = {"anthropic": ["lv-anthropic", "Made by Anthropic"], "official": ["lv-official", "Official marketplace"], "vendor": ["lv-anthropic", "Official, from the tool's maker"], "community": ["lv-community", "Community: check first"]};
+const ONLY = {label:"Made by Anthropic", test: s => s.src === "anthropic"};
+const NOUN = "tools";
+const state = {cat:"all", q:"", only:false};
+
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+const DONE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+/* Display only: keep words whole (non-breaking hyphens) and allow line breaks after "@" and "word/".
+   The copy button copies the original text from data-copy. */
+const pretty = t => esc(t).replace(/-/g, "‑").replace(/@/g, "@<wbr>").replace(/(\w)\//g, "$1/<wbr>");
+
+function cmdRow(text, n, cls){
+  return `<div class="cmdrow${cls ? " " + cls : ""}">${n ? `<span class="stepno">${n}</span>` : ""}<code data-copy="${esc(text)}">${cls ? esc(text) : pretty(text)}</code><button class="cp" type="button" title="Copy" aria-label="Copy">${COPY_ICON}</button></div>`;
+}
+const cmdRows = list => list.map((c, i) => cmdRow(c, list.length > 1 ? i + 1 : 0)).join("");
+const small = t => t ? `<span class="small-hint">${t}</span>` : "";
+
+/* The 5 steps that drop down under the example. */
+function steps(s){
+  const files = s.files.length ? "It uses: " + s.files.map(f => `<code>${f}</code>`).join(" ") : "No files needed for this one.";
+  const first = s.step1 ? `<li><b>${s.step1[0]}</b><span>${s.step1[1]}</span></li>`
+                        : `<li><b>Open the practice folder</b><span>Open <code>${FOLDER}</code> in VS Code. ${files}</span></li>`;
+  const alt = s.alt ? small(s.altLead) + cmdRows(s.alt) : "";
+  return `<ol class="howto-steps">
+      ${first}
+      <li><b>${s.step2 || "Install it"}</b>${s.lead ? `<span>${s.lead}</span>` : ""}${cmdRows(s.install)}${small(s.gets)}${small(s.hint)}${alt}</li>
+      <li><b>${s.askTitle || "Start a new chat and ask"}</b>${cmdRow(s.prompt, 0, "prompt")}</li>
+      <li><b>What you'll see</b><span>${s.see}</span></li>
+      <li><b>${s.removeTitle || "Remove it when you're done"}</b>${s.removeLead ? `<span>${s.removeLead}</span>` : ""}${cmdRows(s.remove)}</li>
+    </ol>`;
+}
+
+const gid = s => "guide-" + s.name.toLowerCase().replace(/[^\w-]/g, "-");
+
+function card(s){
+  const [cls, label] = SRC[s.src];
+  return `<article class="card">
+    <div class="pic ${s.cat}"><img src="${IMG(s.img)}" alt="" loading="lazy" onerror="this.remove()"><span class="cat">${CAT_LABEL[s.cat]}</span></div>
+    <div class="body">
+      <div class="badges"><span class="level ${cls}" style="margin:0">${label}</span>${s.nosignin ? `<span class="level lv-free" style="margin:0">No sign-in</span>` : ""}</div>
+      <p class="name">${s.name}</p>
+      <p class="by">by ${s.by}</p>
+      <p class="what">${s.what}</p>
+      ${s.flag ? `<div class="flag">${s.flag}</div>` : ""}
+      <div class="example"><b>Example</b>${esc(s.prompt).replace(/-/g, "‑")}</div>
+      <div class="guide">
+        <button class="guide-toggle" type="button" aria-expanded="false" aria-controls="${gid(s)}"><span class="hover-label">Hover to see instructions</span><span class="tap-label">Tap to see instructions</span>${CHEV}</button>
+        <div class="guide-body" id="${gid(s)}" role="region" aria-label="How to try ${s.name}"><div class="guide-inner">${steps(s)}</div></div>
+      </div>
+      <div class="get"><a href="${s.url}" target="_blank" rel="noopener">${s.urlLabel || "See details"}</a></div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const list = ITEMS.filter(s =>
+    (state.cat === "all" || s.cat === state.cat) &&
+    (!state.only || ONLY.test(s)) &&
+    (!q || (s.name + " " + s.by + " " + s.what + " " + s.prompt).toLowerCase().includes(q)));
+  document.getElementById("cards").innerHTML = list.map(card).join("") ||
+    `<p class="muted">Nothing matches that search.</p>`;
+  document.getElementById("count").textContent = list.length + " of " + ITEMS.length + " " + NOUN;
+}
+
+const filters = document.getElementById("filters");
+Object.keys(CATS).forEach(k => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.textContent = CATS[k];
+  b.style.marginRight = "6px";
+  b.setAttribute("aria-pressed", String(k === state.cat));
+  b.onclick = () => {
+    state.cat = k;
+    filters.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    render();
+  };
+  filters.appendChild(b);
+});
+const onlyBtn = document.getElementById("onlyBtn");
+onlyBtn.textContent = ONLY.label;
+onlyBtn.onclick = () => {
+  state.only = !state.only;
+  onlyBtn.setAttribute("aria-pressed", String(state.only));
+  render();
+};
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+
+/* Cards: copy buttons, and the instructions panel.
+   With a mouse it opens on hover and closes when the mouse leaves the panel. On touch screens a tap opens and closes it. */
+const cardsEl = document.getElementById("cards");
+const setGuide = (g, open) => {
+  g.classList.toggle("open", open);
+  g.querySelector(".guide-toggle").setAttribute("aria-expanded", String(open));
+};
+cardsEl.addEventListener("click", e => {
+  const btn = e.target.closest(".cp");
+  if (btn) {
+    const text = btn.parentElement.querySelector("code").dataset.copy;
+    const ok = () => {
+      btn.innerHTML = DONE_ICON; btn.classList.add("ok"); btn.setAttribute("aria-label", "Copied");
+      setTimeout(() => { btn.innerHTML = COPY_ICON; btn.classList.remove("ok"); btn.setAttribute("aria-label", "Copy"); }, 1500);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (err) {}
+      document.body.removeChild(ta); ok();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+    else fallback();
+    return;
+  }
+  const toggle = e.target.closest(".guide-toggle");
+  if (toggle) {
+    const g = toggle.closest(".guide");
+    setGuide(g, !g.classList.contains("open"));
+  }
+});
+cardsEl.addEventListener("mouseout", e => {
+  const g = e.target.closest(".guide");
+  if (g && !g.contains(e.relatedTarget)) setGuide(g, false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".guide.open").forEach(g => setGuide(g, false));
+});
+
+/* hero mosaic: the first 12 card photos */
+document.getElementById("mosaic").innerHTML = ITEMS.slice(0, 12)
+  .map(s => `<img src="${IMG(s.img)}" alt="" onerror="this.style.visibility='hidden'">`).join("");
+
+render();
+</script>
+</body>
+</html>

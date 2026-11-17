@@ -1,0 +1,21 @@
+order_id,customer,order_date,items,total_usd,status,promised_date
+GL-1001,Dana R.,2026-10-26,Printer paper (box) x3,96,Delivered,2026-10-29
+GL-1002,Levin & Partners,2026-10-27,Office chair x4,756,Delivered late,2026-10-30
+GL-1003,Michael T.,2026-10-28,Ink cartridge x2,90,Delivered,2026-10-31
+GL-1004,Orbit Systems,2026-10-28,Printer paper (box) x20,640,Delayed,2026-11-02
+GL-1005,Noa S.,2026-10-29,Office chair x1,189,Delivered,2026-11-02
+GL-1006,Amit K.,2026-10-30,Ink cartridge x4,180,Delivered late,2026-11-03
+GL-1007,Ruth B.,2026-11-01,"Office chair x2, Ink cartridge x1",423,Delayed,2026-11-04
+GL-1008,Yossi M.,2026-11-01,Printer paper (box) x2,64,Delivered,2026-11-04
+GL-1009,Hila G.,2026-11-02,Office chair x1,189,On the way,2026-11-05
+GL-1010,Lior P.,2026-11-02,Ink cartridge x1,45,Delivered,2026-11-05
+GL-1011,Tamar E.,2026-11-03,Printer paper (box) x5,160,Delayed,2026-11-06
+GL-1012,David A.,2026-11-03,Office chair x2,378,On the way,2026-11-06
+GL-1013,Shira L.,2026-11-04,Ink cartridge x3,135,Processing,2026-11-09
+GL-1014,Eitan W.,2026-11-05,"Office chair x1, Printer paper (box) x1",221,On the way,2026-11-09
+GL-1015,Maya D.,2026-11-05,Printer paper (box) x10,320,Processing,2026-11-10
+GL-1016,Levin & Partners,2026-11-06,Ink cartridge x6,270,Processing,2026-11-10
+GL-1017,Orbit Systems,2026-11-06,Office chair x12 (10% bulk discount),2041.20,Processing,2026-11-12
+GL-1018,Dana R.,2026-11-07,Printer paper (box) x4,128,Processing,2026-11-11
+GL-1019,Michael T.,2026-11-08,Ink cartridge x2,90,Processing,2026-11-12
+GL-1020,Noa S.,2026-11-08,Office chair x1,189,Processing,2026-11-12

@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill Discovery Guide</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --bad:#b3261e; --bad-soft:#fbe7e5;
+    --blue:#2a5db0; --blue-soft:#e4ecfa; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+      --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+    --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+  a{color:var(--accent)}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px;font-size:.9em;overflow-wrap:anywhere}
+  h2{font-size:clamp(24px,3.4vw,30px);line-height:1.2;margin:0 0 6px}
+  h3{font-size:18px;margin:0 0 6px;line-height:1.3}
+  p{margin:0 0 10px}
+  .lines span{display:block}
+  .muted{color:var(--muted)}
+
+  /* hero */
+  .hero{position:relative;border-radius:0 0 22px 22px;overflow:hidden;color:#fff;margin:0 -16px;min-height:340px;display:flex;align-items:flex-end}
+  .mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr)}
+  .mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.25) 0%,rgba(10,10,10,.82) 70%)}
+  .hero-text{position:relative;z-index:1;padding:40px 28px 30px;max-width:780px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#ffb59a}
+  .hero h1{font-size:clamp(30px,5.4vw,50px);line-height:1.08;margin:8px 0 12px}
+  .hero p{font-size:18px;color:#eee;margin:0}
+
+  /* section nav */
+  .snav{position:sticky;top:0;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;margin-bottom:8px}
+  .snav a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:14px;font-weight:600;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+  .snav a:hover{border-color:var(--accent)}
+  section{padding:40px 0 4px;scroll-margin-top:56px}
+  .intro{color:var(--muted);font-size:17px;margin-bottom:16px}
+  .intro code,.howto-steps li>span code{white-space:nowrap}
+
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .stack .box{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 24px;align-items:start}
+  .stack .box>h3{margin:2px 0 0}
+  .stack .box p:last-child{margin-bottom:0}
+  .small{font-size:14px}
+  p,li,.lines span,.what,.example,.flag{text-wrap:pretty}
+  .cmd{overflow-wrap:normal;word-break:normal;white-space:pre-wrap}
+
+  .tip{background:var(--ok-soft);border-color:transparent}
+  .warnbox{background:var(--warn-soft);border-color:transparent}
+  .badbox{background:var(--bad-soft);border-color:transparent}
+  ul.clean{margin:6px 0 0;padding-left:20px}
+  ul.clean li{margin:4px 0}
+
+  /* trust levels */
+  .level{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+  .lv-anthropic{background:var(--ok-soft);color:var(--ok)}
+  .lv-official{background:var(--blue-soft);color:var(--blue)}
+  .lv-community{background:var(--warn-soft);color:var(--warn)}
+
+  /* gallery */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 16px}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:99px;cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .controls input{flex:1 1 200px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+  .count{font-size:14px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+  .pic{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#c4552d,#7a3cc4)}
+  .pic.business{background:linear-gradient(135deg,#2a5db0,#2f7d4f)}
+  .pic.productivity{background:linear-gradient(135deg,#9a6a00,#c4552d)}
+  .pic.gaming{background:linear-gradient(135deg,#5b2bb0,#0f8a9e)}
+  .rating{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+  .lv-top{background:var(--accent);color:#fff}
+  .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  .cat{position:absolute;top:10px;left:10px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.62);color:#fff;backdrop-filter:blur(4px)}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:17px;font-weight:700;color:var(--accent);margin:0}
+  .by{font-size:13px;color:var(--muted);margin:-4px 0 2px}
+  .what{margin:0}
+  .flag{font-size:13px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:8px;padding:4px 9px}
+  .get{font-size:13px;margin-top:2px;padding-top:6px;border-top:1px solid var(--line)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .card{position:relative}
+  .example{font-size:14px;line-height:1.45;background:var(--code);border-radius:8px;padding:8px 10px}
+  .example b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  /* Instructions: closed by default. They drop down while the mouse is on the panel (or after a tap). */
+  .guide{border:1px dashed var(--line);border-radius:10px;transition:border-color .15s}
+  .guide-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+  .guide-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:9px}
+  .guide-toggle .chev{margin-left:auto;flex:none;transition:transform .2s}
+  .tap-label{display:none}
+  @media (hover:none){ .hover-label{display:none} .tap-label{display:inline} }
+  .guide-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+  .guide-inner{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s linear .22s}
+  .guide.open{border-color:var(--accent);border-style:solid}
+  .guide.open .guide-body{grid-template-rows:1fr}
+  .guide.open .guide-inner{visibility:visible;transition-delay:0s}
+  .guide.open .chev{transform:rotate(180deg)}
+  @media (hover:hover){
+    .guide:hover{border-color:var(--accent);border-style:solid}
+    .guide:hover .guide-body{grid-template-rows:1fr;transition-delay:.12s}
+    .guide:hover .guide-inner{visibility:visible;transition-delay:.12s}
+    .guide:hover .chev{transform:rotate(180deg)}
+  }
+  ol.howto-steps{margin:0 10px;padding:10px 2px 12px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45}
+  ol.howto-steps li::marker{font-weight:700;color:var(--accent)}
+  ol.howto-steps li>b{display:block;margin-bottom:3px}
+  ol.howto-steps li>span{display:block;text-wrap:pretty}
+  .small-hint{font-size:12px;color:var(--muted);margin-top:5px}
+  .cmdrow.prompt code{font-family:inherit;font-size:13px}
+  .cmdrow{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 8px;margin-top:4px}
+  .cmdrow code{flex:1;min-width:0;background:none;padding:0;font-size:12px;line-height:1.45;overflow-wrap:break-word;word-break:normal}
+  .stepno{flex:none;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;display:grid;place-items:center}
+  .cp{flex:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .cp:hover{border-color:var(--accent);color:var(--accent)}
+  .cp.ok{color:var(--ok);border-color:var(--ok)}
+  .cp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .install-what{font-size:13px;margin-top:8px;line-height:1.4}
+  .install-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  /* steps */
+  ol.steps{margin:6px 0 0;padding-left:22px}
+  ol.steps li{margin:6px 0}
+  .cmd{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px;overflow-wrap:anywhere}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 4px}
+  .quote{border-left:3px solid var(--bad);padding:4px 0 4px 12px;margin:10px 0;font-style:italic}
+  .quote cite{display:block;font-size:13px;font-style:normal;color:var(--muted)}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+  footer{margin-top:50px;color:var(--muted);font-size:14px}
+  button:focus-visible,.snav a:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:640px){
+    .stack .box{grid-template-columns:1fr}
+    .g4{grid-template-columns:1fr}
+    .cmd{overflow-wrap:anywhere}
+    .mosaic{grid-template-columns:repeat(3,1fr)}
+    .hero-text{padding:28px 18px 22px}
+  }
+  @media print{ .guide-toggle{display:none} .guide-body{grid-template-rows:1fr} .guide-inner{visibility:visible} .snav,.controls{display:none} .hero{color:#000;min-height:0}.hero::after,.mosaic{display:none} .hero p{color:#333} .eyebrow{color:var(--accent)} .card{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="mosaic" id="mosaic" aria-hidden="true"></div>
+  <div class="hero-text">
+    <div class="eyebrow">Lesson one &middot; Topic 2</div>
+    <h1>Skill discovery: give Claude new superpowers</h1>
+    <p class="lines">
+      <span>Skills teach Claude new jobs, from Excel reports to generative art.</span>
+      <span>Learn where to find them, how to install them, and how to stay safe.</span>
+    </p>
+  </div>
+</header>
+
+<nav class="snav" aria-label="Sections">
+  <a href="#what">What is a skill</a>
+  <a href="#find">Where to find</a>
+  <a href="#gallery">42 skills</a>
+  <a href="#install">Install</a>
+  <a href="#use">Use</a>
+  <a href="#remove">Remove</a>
+  <a href="#share">Share</a>
+  <a href="#safe">Stay safe</a>
+  <a href="#try">Try it</a>
+</nav>
+
+<!-- WHAT -->
+<section id="what">
+  <h2>What is a skill?</h2>
+  <div class="grid g3">
+    <div class="box">
+      <h3>A skill</h3>
+      <p class="lines">
+        <span>A folder with instructions for Claude.</span>
+        <span>It teaches Claude one job, your way.</span>
+        <span>Claude uses it when it fits.</span>
+        <span>Or type <code>/skill-name</code> to start it.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>A plugin</h3>
+      <p class="lines">
+        <span>A package of several skills.</span>
+        <span>It can also add tools and connections.</span>
+        <span>Most skills come inside a plugin.</span>
+      </p>
+    </div>
+    <div class="box tip">
+      <h3>Think of it like this</h3>
+      <p class="lines">
+        <span>Claude is a smart new employee.</span>
+        <span>A skill is the manual for one task.</span>
+        <span>A plugin is a whole training course.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FIND -->
+<section id="find">
+  <h2>Where to find skills</h2>
+  <p class="intro">Start at the top of this list. The further down, the more carefully you check.</p>
+  <div class="grid g4">
+    <div class="box">
+      <span class="level lv-anthropic">Most trusted</span>
+      <h3>Anthropic's official skills</h3>
+      <p class="lines">
+        <span>Made by Anthropic, the company behind Claude.</span>
+        <span>Word, Excel, PowerPoint, PDF, art, design and more.</span>
+        <span>Page: <a href="https://github.com/anthropics/skills" target="_blank" rel="noopener">github.com/anthropics/skills</a></span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-official">Trusted directory, still check</span>
+      <h3>The official plugin marketplace</h3>
+      <p class="lines">
+        <span>Anthropic's directory of plugins, built into Claude Code.</span>
+        <span>Some plugins come from other companies, like Canva.</span>
+        <span>Open it: <code>/plugins</code> in VS Code, <code>/plugin</code> in the terminal.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">Check before installing</span>
+      <h3>Community lists</h3>
+      <p class="lines">
+        <span>Hundreds of skills made by people around the world.</span>
+        <span>Great ideas, but anyone can publish there.</span>
+        <span>Lists: <a href="https://github.com/travisvn/awesome-claude-skills" target="_blank" rel="noopener">awesome-claude-skills</a> and <a href="https://github.com/ComposioHQ/awesome-claude-skills" target="_blank" rel="noopener">Composio's list</a>.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">Check before installing</span>
+      <h3>Skill directories</h3>
+      <p class="lines">
+        <span><a href="https://skills.sh" target="_blank" rel="noopener">skills.sh</a> ranks skills by how often people install them.</span>
+        <span>Its audit page shows security scans from Snyk and Socket.</span>
+        <span>Popular does not mean safe. Read it yourself too.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <h2>42 skills worth knowing</h2>
+  <p class="intro">Some are just for fun and wow. Some will save you hours every week.</p>
+  <p class="intro lines" style="margin-top:-10px"><span>The first 10 are the top visual skills, rated for wow and for setup effort.</span><span>Business examples use the practice files in the <code>02-skill-files</code> folder.</span><span>Under each example there is a small instructions panel.</span><span>Hover over it to see how to install and try the skill.</span><span>On a phone or tablet, tap the panel instead.</span></p>
+  <div class="controls">
+    <div id="filters" role="group" aria-label="Filter by type"></div>
+    <button class="chip" type="button" id="trustOnly" aria-pressed="false">Anthropic only</button>
+    <input id="q" type="search" placeholder="Search, e.g. excel, art, invoices" aria-label="Search skills">
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="muted lines" style="margin-top:14px;font-size:14px"><span>The badge on each card shows where it comes from. Red notes are things to think about first.</span><span>Two-step installs: run step 1 once, then step 2. Each copy button copies one line.</span></p>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <h2>How to install a skill</h2>
+  <p class="intro">Three ways. Pick the one that matches where the skill comes from.</p>
+  <div class="stack">
+    <div class="box">
+      <h3>1. In VS Code</h3>
+      <div>
+        <ol class="steps">
+          <li>In the Claude Code box, type <code>/plugins</code>.</li>
+          <li>For Anthropic's skills, open the <b>Marketplaces</b> tab and add <code>anthropics/skills</code>.</li>
+          <li>Open the <b>Plugins</b> tab and search for the plugin.</li>
+          <li>Click <b>Install</b>, then choose <b>Install for you</b>.</li>
+        </ol>
+        <p class="muted small">Plugins tab empty? Add <code>anthropics/claude-plugins-official</code> on the Marketplaces tab.</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>2. In the terminal</h3>
+      <div>
+        <p class="label">Anthropic's skills</p>
+        <span class="cmd">/plugin marketplace add anthropics/skills</span>
+        <span class="cmd">/plugin install document-skills@anthropic-agent-skills</span>
+        <span class="cmd">/plugin install example-skills@anthropic-agent-skills</span>
+        <p class="label">The official marketplace</p>
+        <span class="cmd">/plugin install playground@claude-plugins-official</span>
+        <p class="muted small">Or type <code>/plugin</code> alone and browse the <b>Discover</b> tab.</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>3. Copy a skill folder</h3>
+      <div>
+        <p class="lines">
+          <span>Use this for skills from GitHub that are not plugins.</span>
+          <span>Copy the skill's folder into one of these places:</span>
+        </p>
+        <p class="label">Just for you, in all your projects</p>
+        <span class="cmd">C:\Users\&lt;you&gt;\.claude\skills\</span>
+        <p class="label">For this project only</p>
+        <span class="cmd">.claude\skills\  inside your project folder</span>
+        <p class="muted small">Claude picks it up without a restart.</p>
+        <p class="label">Or use the skills.sh installer, in a terminal (needs Node.js)</p>
+        <span class="cmd">npx skills add owner/repo --skill skill-name -a claude-code --copy -y</span>
+      </div>
+    </div>
+    <div class="box tip">
+      <h3>Did it work?</h3>
+      <p class="lines">
+        <span>Type <code>/</code> and look for the skill's name in the menu.</span>
+        <span>Or type <code>/skills</code> to see your full list.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- USE -->
+<section id="use">
+  <h2>How to use a skill</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Just ask</h3>
+      <div>
+        <p class="lines">
+          <span>Claude picks the right skill by itself.</span>
+          <span>Naming the skill makes it even more reliable:</span>
+        </p>
+        <span class="cmd">Use the xlsx skill to turn sales.csv into an Excel file.</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Type its name</h3>
+      <div>
+        <p class="lines"><span>Start your message with a slash and the skill's name, then your request.</span></p>
+        <span class="cmd">/internal-comms write a status update from meeting-notes.txt</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Skills inside a plugin</h3>
+      <p class="lines">
+        <span>They show as <code>/plugin-name:skill-name</code>.</span>
+        <span>Type <code>/</code> and the plugin's name to find them.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- REMOVE -->
+<section id="remove">
+  <h2>How to remove or turn off a skill</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Remove a plugin</h3>
+      <div>
+        <p class="lines">
+          <span>VS Code: type <code>/plugins</code>, find the plugin, and uninstall it.</span>
+          <span>Terminal:</span>
+        </p>
+        <span class="cmd">/plugin uninstall example-skills@anthropic-agent-skills</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Turn it off for now</h3>
+      <p class="lines">
+        <span>Keep it installed, but stop it from running.</span>
+        <span>VS Code: type <code>/skills</code> and change the skill's visibility.</span>
+        <span>Terminal: type <code>/plugin disable</code> and choose the plugin.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Remove a copied skill</h3>
+      <p class="lines">
+        <span>Delete its folder from your <code>skills</code> folder.</span>
+        <span>It disappears from <code>/skills</code> right away.</span>
+      </p>
+    </div>
+    <div class="box warnbox">
+      <h3>Good habit</h3>
+      <p class="lines"><span>Remove skills you do not use. Fewer skills means less risk and lower cost.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- SHARE -->
+<section id="share">
+  <h2>How to share skills with your team</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Share a project folder</h3>
+      <p class="lines">
+        <span>Put the skill in <code>.claude\skills\</code> inside the project folder.</span>
+        <span>Everyone who opens that project gets the skill too.</span>
+        <span>Teams usually share project folders through Git.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Share a plugin</h3>
+      <p class="lines">
+        <span>Install it with <b>Install for this project</b>.</span>
+        <span>Claude saves that choice in the project's settings.</span>
+        <span>Each teammate then installs it once on their own computer.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>On claude.ai</h3>
+      <p class="lines">
+        <span>Upload a skill as a ZIP file under <b>Customize &gt; Skills</b>.</span>
+        <span>Team and Enterprise plans can share skills with colleagues.</span>
+        <span>Admins can publish skills to the whole company.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SAFE -->
+<section id="safe">
+  <h2>Stay safe: skills can run code on your computer</h2>
+  <p class="intro">Most skills are just instructions. Some also include programs. Treat them like any software you download.</p>
+  <div class="quote">"A Claude Code plugin you install can execute arbitrary code on your machine with your user privileges."<cite>Claude Code documentation, plugin security</cite></div>
+  <div class="quote">"Make sure you trust a plugin before installing, updating, or using it."<cite>Anthropic's official plugin marketplace</cite></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="box badbox">
+      <h3>Skills to avoid</h3>
+      <ul class="clean">
+        <li>An unknown author, with no history and no other users.</li>
+        <li>It asks you to paste a password or API key.</li>
+        <li>It includes programs or scripts you cannot read or understand.</li>
+        <li>It sends your files or data to outside websites.</li>
+        <li>It can spend money, send emails or sign things without asking you.</li>
+        <li>A copy of a famous skill under a slightly different name.</li>
+      </ul>
+    </div>
+    <div class="box tip">
+      <h3>Before you install: 5 checks</h3>
+      <ol class="steps">
+        <li><b>Who made it?</b> Anthropic, a known company, or a stranger?</li>
+        <li><b>Read <code>SKILL.md</code>.</b> Does it do only what it says?</li>
+        <li><b>Look for programs.</b> Check folders like <code>scripts</code> and <code>bin</code>.</li>
+        <li><b>Check the audits.</b> skills.sh shows security scan results.</li>
+        <li><b>Test it first.</b> Use a practice folder, not real client files.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="stack" style="margin-top:14px">
+    <div class="box">
+      <h3>Updates can change it</h3>
+      <p class="lines"><span>A plugin you checked today can change after an update.</span><span>Re-check skills that touch money or customer data.</span></p>
+    </div>
+    <div class="box">
+      <h3>Connected accounts</h3>
+      <p class="lines"><span>Some skills connect to Canva, Spotify or shipping accounts.</span><span>They can act in that account for you.</span></p>
+    </div>
+    <div class="box">
+      <h3>At work</h3>
+      <p class="lines"><span>Ask IT before installing skills on a work computer.</span><span>Companies can block or approve plugins for everyone.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- TRY -->
+<section id="try">
+  <h2>Try it yourself: install, use, remove</h2>
+  <p class="intro">About 15 minutes. Use the <code>demo-folder</code> from the slash commands exercise.</p>
+  <div class="box">
+    <ol class="steps">
+      <li>Open <code>demo-folder</code> in VS Code and open Claude Code.</li>
+      <li>Type <code>/plugins</code>. On the <b>Marketplaces</b> tab, add <code>anthropics/skills</code>.</li>
+      <li>On the <b>Plugins</b> tab, find <b>example-skills</b>. Install it for you.</li>
+      <li>Type <code>/</code> and look for <b>algorithmic-art</b>.</li>
+      <li>Ask:
+        <span class="cmd">Use the algorithmic-art skill to make generative art inspired by sales.csv.</span>
+        Open the file it creates in your browser.
+      </li>
+      <li>Ask:
+        <span class="cmd">Use the internal-comms skill to write a short status update from meeting-notes.txt.</span>
+      </li>
+      <li>Remove it: open <code>/plugins</code> and uninstall <b>example-skills</b>.</li>
+      <li>Type <code>/</code> again. Is <b>algorithmic-art</b> gone?</li>
+    </ol>
+    <p class="label">Working in the terminal instead?</p>
+    <span class="cmd">/plugin marketplace add anthropics/skills</span>
+    <span class="cmd">/plugin install example-skills@anthropic-agent-skills</span>
+    <span class="cmd">/plugin uninstall example-skills@anthropic-agent-skills</span>
+    <details><summary>Check yourself</summary>
+      <div class="lines" style="margin-top:6px">
+        <span>Step 5 gives you an HTML page with moving, colorful art.</span>
+        <span>Step 6 gives you a clear update about deliveries, wrong items and slow replies.</span>
+        <span>After step 7, the skill is gone from the <code>/</code> menu.</span>
+      </div>
+    </details>
+  </div>
+  <div class="box tip" style="margin-top:14px">
+    <h3>Summary</h3>
+    <p class="lines">
+      <span>Skills are training manuals that give Claude new jobs.</span>
+      <span>Find them, read them, install them, and remove what you don't use.</span>
+      <span>Trust official sources first, and check everything else.</span>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p class="lines">
+    <span>Sources: Claude Code documentation, <a href="https://github.com/anthropics/skills" target="_blank" rel="noopener">anthropics/skills</a>, <a href="https://github.com/anthropics/claude-plugins-official" target="_blank" rel="noopener">claude-plugins-official</a>, and the community lists linked above.</span>
+    <span>Skills and plugin names change often. Check them again before each class.</span>
+    <span>Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</span>
+  </p>
+</footer>
+</div>
+
+<script>
+/* Each skill card is generated from SKILLS. Edit the data here, not the rendered HTML.
+   src: "anthropic" = made by Anthropic, "official" = in Anthropic's official marketplace,
+   "vendor" = made by the tool's own company, "community" = made by someone else.
+   files: practice files from the 02-skill-files folder that the example uses. */
+const IMG = id => "https://images.unsplash.com/photo-" + id + "?w=640&h=400&q=70&auto=format&fit=crop";
+const FOLDER = "02-skill-files";
+const SKILLS = [
+{"name": "threejs-webgl", "by": "freshtechbro", "src": "community", "cat": "wow", "img": "1614732414444-096e5f1122d5", "what": "Builds interactive 3D worlds that run in the browser.", "prompt": "Use the threejs-webgl skill to build a 3D solar system with orbiting planets, glowing stars and clickable planet information. Save it as solar-system.html.", "see": "A 3D solar system in your browser. Drag to rotate, scroll to zoom, and click a planet to read about it.", "files": [], "install": ["/plugin marketplace add freshtechbro/claudedesignskills", "/plugin install threejs-webgl@claude-design-skillstack"], "remove": ["/plugin uninstall threejs-webgl@claude-design-skillstack"], "gets": "Installs only this skill.", "url": "https://github.com/freshtechbro/claudedesignskills", "top": true, "wow": "10/10", "setup": "Medium"},
+{"name": "gsap-scrolltrigger", "by": "GSAP (official)", "src": "vendor", "cat": "wow", "img": "1558981806-ec527fa84c39", "what": "Makes cinematic websites that animate as you scroll.", "prompt": "Use the GSAP skills to create a cinematic Apple-style landing page introducing a futuristic electric motorcycle. Animate it with ScrollTrigger. Save it as motorcycle.html.", "see": "A landing page where the motorcycle, the text and whole scenes move and change as you scroll.", "files": [], "install": ["/plugin marketplace add greensock/gsap-skills", "/plugin install gsap-skills@gsap-skills"], "remove": ["/plugin uninstall gsap-skills@gsap-skills"], "gets": "Installs the official <b>GSAP</b> pack: 8 skills, ScrollTrigger included.", "url": "https://github.com/greensock/gsap-skills", "wow": "10/10", "setup": "Easy to medium"},
+{"name": "remotion", "by": "Remotion (official)", "src": "vendor", "cat": "wow", "img": "1501339847302-ac426a4a7cbb", "what": "Creates animated videos and short ads with code.", "flag": "Needs Node.js. Companies may need a paid Remotion license.", "prompt": "Use Remotion to produce a 15-second animated commercial for a new coffee shop, with moving text, prices and transitions. Then open it in Remotion Studio.", "see": "A new video project. Remotion Studio opens in your browser, where you can play the commercial.", "files": [], "install": ["npx skills add remotion-dev/skills --skill remotion-best-practices --skill remotion-create -a claude-code --copy -y"], "remove": ["npx skills remove remotion-best-practices remotion-create"], "gets": "Installs 2 official Remotion skills: best practices and create.", "url": "https://github.com/remotion-dev/skills", "wow": "9/10", "setup": "Medium to heavy"},
+{"name": "algorithmic-art", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1543722530-d2c3201371e7", "what": "Creates generative art with code: flowing shapes, particles and color.", "prompt": "Use the algorithmic-art skill to make 20,000 glowing particles form a galaxy that reacts to mouse movements. Save it as galaxy.html.", "see": "A glowing particle galaxy that moves with your mouse. Controls let you change colors and movement.", "files": [], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/algorithmic-art", "wow": "9/10", "setup": "Easy"},
+{"name": "pixijs", "by": "PixiJS (official)", "src": "vendor", "cat": "gaming", "img": "1511512578047-dfb367046420", "what": "Builds 2D browser games and visual effects.", "prompt": "Use the pixijs skill to build a playable space-shooter game with explosions, scoring and colorful enemies. Save it as space-shooter.html.", "see": "A game in your browser. Move with the arrow keys and shoot with the space bar.", "files": [], "install": ["/plugin marketplace add pixijs/pixijs-skills", "/plugin install pixijs-skills@pixijs-skills"], "remove": ["/plugin uninstall pixijs-skills@pixijs-skills"], "gets": "Installs the official <b>PixiJS</b> pack: 2 skills.", "url": "https://github.com/pixijs/pixijs-skills", "wow": "9/10", "setup": "Medium"},
+{"name": "react-three-fiber", "by": "freshtechbro", "src": "community", "cat": "gaming", "img": "1617791160505-6f00504e3519", "what": "Builds interactive 3D scenes with real physics: falling, bouncing, stacking.", "flag": "Builds a small app project. Needs Node.js.", "prompt": "Use the react-three-fiber skill to create a 3D marble playground with bouncing balls, ramps, collisions and adjustable gravity.", "see": "A 3D scene in your browser. Marbles roll down ramps and bounce, and a slider changes gravity.", "files": [], "install": ["/plugin marketplace add freshtechbro/claudedesignskills", "/plugin install react-three-fiber@claude-design-skillstack"], "remove": ["/plugin uninstall react-three-fiber@claude-design-skillstack"], "gets": "Installs only this skill.", "url": "https://github.com/freshtechbro/claudedesignskills", "wow": "9/10", "setup": "Medium to advanced"},
+{"name": "canvas-design", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1414235077428-338989a2e8c0", "what": "Designs posters and marketing graphics as PNG or PDF files.", "prompt": "Use the canvas-design skill to design a luxury restaurant opening poster with striking typography and an original visual composition. Save it as restaurant-poster.png.", "see": "A poster image in the folder. Open it to see the design.", "files": [], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/canvas-design", "wow": "8/10", "setup": "Easy"},
+{"name": "ui-ux-pro-max", "by": "nextlevelbuilder", "src": "community", "cat": "wow", "img": "1581291518857-4e27b48ff24e", "what": "Designs beautiful websites and dashboards, with ready-made styles and color palettes.", "flag": "May need Python on your computer.", "prompt": "Use the ui-ux-pro-max skill to build a beautiful business dashboard for sales, customers and revenue, with dark mode. Use the numbers in sales.csv.", "see": "A polished dashboard page with charts and cards, and a switch for dark mode.", "files": ["sales.csv"], "install": ["/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill", "/plugin install ui-ux-pro-max@ui-ux-pro-max-skill"], "remove": ["/plugin uninstall ui-ux-pro-max@ui-ux-pro-max-skill"], "gets": "Installs the <b>UI UX Pro Max</b> pack, with design and slides skills.", "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill", "wow": "8/10", "setup": "Easy"},
+{"name": "visual-explainer", "by": "nicobailon", "src": "community", "cat": "wow", "img": "1677442136019-21780ecad995", "what": "Turns complicated ideas into interactive, animated diagram pages.", "prompt": "Use the visual-explainer skill to explain how a chatbot works, with animated agents, tools, databases and arrows showing the data flow.", "see": "An HTML page with an animated diagram of how a chatbot works, step by step.", "files": [], "install": ["/plugin marketplace add nicobailon/visual-explainer", "/plugin install visual-explainer@visual-explainer-marketplace"], "remove": ["/plugin uninstall visual-explainer@visual-explainer-marketplace"], "gets": "Installs only this skill.", "url": "https://github.com/nicobailon/visual-explainer", "wow": "8/10", "setup": "Easy"},
+{"name": "spline-interactive", "by": "freshtechbro", "src": "community", "cat": "wow", "img": "1560769629-975ec94e6a86", "what": "Adds interactive 3D product scenes made in Spline to web pages.", "flag": "Uses 3D scenes made in Spline, a free design tool.", "prompt": "Use the spline-interactive skill to build an interactive product showcase where the customer rotates a sneaker and changes its colors.", "see": "A product page with a 3D sneaker you can rotate and recolor. It may ask for your own Spline scene link.", "files": [], "install": ["/plugin marketplace add freshtechbro/claudedesignskills", "/plugin install spline-interactive@claude-design-skillstack"], "remove": ["/plugin uninstall spline-interactive@claude-design-skillstack"], "gets": "Installs only this skill.", "url": "https://github.com/freshtechbro/claudedesignskills", "wow": "9/10", "setup": "Medium; may need a Spline account"},
+{"name": "playcanvas-engine", "by": "freshtechbro", "src": "community", "cat": "gaming", "img": "1538481199705-c710c4e965fc", "what": "Builds 3D browser games with a real game engine.", "prompt": "Use the playcanvas-engine skill to build a 3D racing game: drive a car around a neon track against the clock. Save it as neon-racer.html.", "see": "A 3D racing game in your browser. Steer with the arrow keys and beat the clock.", "files": [], "install": ["/plugin marketplace add freshtechbro/claudedesignskills", "/plugin install playcanvas-engine@claude-design-skillstack"], "remove": ["/plugin uninstall playcanvas-engine@claude-design-skillstack"], "gets": "Installs only this skill.", "url": "https://github.com/freshtechbro/claudedesignskills"},
+{"name": "babylonjs-engine", "by": "freshtechbro", "src": "community", "cat": "gaming", "img": "1612287230202-1ff1d85d1bdf", "what": "Builds 3D games and worlds with physics, light and shadows.", "prompt": "Use the babylonjs-engine skill to build a 3D maze game: find the treasure before the timer runs out. Save it as maze-game.html.", "see": "A 3D maze you walk through with the arrow keys. A timer counts down until you find the treasure.", "files": [], "install": ["/plugin marketplace add freshtechbro/claudedesignskills", "/plugin install babylonjs-engine@claude-design-skillstack"], "remove": ["/plugin uninstall babylonjs-engine@claude-design-skillstack"], "gets": "Installs only this skill.", "url": "https://github.com/freshtechbro/claudedesignskills"},
+{"name": "slack-gif-creator", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1563089145-599997674d42", "what": "Makes small animated GIFs, sized for Slack messages and emoji.", "flag": "Needs Python on your computer.", "prompt": "Use the slack-gif-creator skill to make a celebration GIF for Slack that says 'Sales target hit!' with confetti. Save it as target-hit.gif.", "see": "An animated GIF in the folder. Claude may ask to install Python tools first.", "files": [], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/slack-gif-creator"},
+{"name": "theme-factory", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1525909002-1b05e0c869d8", "what": "Applies one of 10 ready-made color and font themes to slides or pages.", "prompt": "Use the theme-factory skill. Make a one-page HTML summary of sales.csv, then show it in three different themes.", "see": "The same summary page in three different looks.", "files": ["sales.csv"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/theme-factory"},
+{"name": "frontend-design", "by": "Anthropic", "src": "anthropic", "cat": "wow", "img": "1561070791-2526d30994b5", "what": "Makes web pages look professionally designed, not generic.", "prompt": "Use the frontend-design skill to build a landing page for Greenleaf's new promise: delivery in 48 hours or it's free. Save it as landing.html.", "see": "A designed landing page. Open landing.html in your browser.", "files": [], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/frontend-design"},
+{"name": "playground", "by": "Anthropic", "src": "official", "cat": "wow", "img": "1511512578047-dfb367046420", "what": "Builds interactive one-page explorers with sliders and live controls.", "prompt": "Use the playground skill to build an interactive explorer for sales.csv, with filters for product and region.", "see": "An HTML page with controls. Change a filter and the numbers update.", "files": ["sales.csv"], "install": ["/plugin install playground@claude-plugins-official"], "remove": ["/plugin uninstall playground@claude-plugins-official"], "gets": "Installs this skill as a plugin.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "frontend-slides", "by": "zarazhangrui", "src": "community", "cat": "wow", "img": "1556761175-5973dc0f32e7", "what": "Turns ideas or PowerPoint files into animated web presentations.", "prompt": "Use the frontend-slides skill to turn meeting-notes.txt into a 5-slide animated presentation.", "see": "A presentation that opens in your browser. Use the arrow keys.", "files": ["meeting-notes.txt"], "install": ["/plugin marketplace add zarazhangrui/frontend-slides", "/plugin install frontend-slides@frontend-slides"], "remove": ["/plugin uninstall frontend-slides@frontend-slides"], "gets": "Installs only this skill.", "url": "https://github.com/zarazhangrui/frontend-slides"},
+{"name": "d3-viz", "by": "chrisvoncsefalvay", "src": "community", "cat": "wow", "img": "1551288049-bebda4e38f71", "what": "Creates interactive charts you can hover over, zoom and explore.", "prompt": "Use the d3-viz skill to make an interactive chart of monthly revenue per product from sales.csv. Save it as sales-chart.html.", "see": "A chart in your browser. Hover over a point to see its numbers.", "files": ["sales.csv"], "install": ["npx skills add chrisvoncsefalvay/claude-d3js-skill --skill d3-viz -a claude-code --copy -y"], "remove": ["npx skills remove d3-viz"], "gets": "Installs only this skill.", "url": "https://github.com/chrisvoncsefalvay/claude-d3js-skill"},
+{"name": "web-asset-generator", "by": "alonw0", "src": "community", "cat": "wow", "img": "1586717791821-3f44a563fa4c", "what": "Generates website icons, app icons and social media images.", "prompt": "Use the web-asset-generator skill to create a favicon, app icons and a social media image from greenleaf-logo.png.", "see": "A set of icon and image files in different sizes.", "files": ["greenleaf-logo.png"], "install": ["/plugin marketplace add alonw0/web-asset-generator", "/plugin install web-asset-generator@web-asset-generator-marketplace"], "remove": ["/plugin uninstall web-asset-generator@web-asset-generator-marketplace"], "gets": "Installs only this skill.", "url": "https://github.com/alonw0/web-asset-generator"},
+{"name": "raffle-winner-picker", "by": "ComposioHQ", "src": "community", "cat": "wow", "img": "1513151233558-d860c5398176", "what": "Picks fair, random winners from a list or a spreadsheet.", "prompt": "Use the raffle-winner-picker skill to pick 3 winners from raffle-entries.csv. Remove duplicate entries first.", "see": "3 winners, and a note that two duplicate rows were removed.", "files": ["raffle-entries.csv"], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill raffle-winner-picker -a claude-code --copy -y"], "remove": ["npx skills remove raffle-winner-picker"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/raffle-winner-picker"},
+{"name": "domain-name-brainstormer", "by": "ComposioHQ", "src": "community", "cat": "wow", "img": "1484480974693-6ca0a78fb36b", "what": "Suggests website names and checks which ones are still available.", "prompt": "Use the domain-name-brainstormer skill to suggest 10 domain names for Greenleaf, an office-supplies shop for small businesses.", "see": "10 name ideas, with which ones look available.", "files": [], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill domain-name-brainstormer -a claude-code --copy -y"], "remove": ["npx skills remove domain-name-brainstormer"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/domain-name-brainstormer"},
+{"name": "canva", "by": "Canva", "src": "official", "cat": "wow", "img": "1558655146-9f40138edfeb", "what": "Creates, edits and resizes Canva designs, and checks them against your brand.", "flag": "Connects to your Canva account.", "prompt": "Use Canva to create an Instagram post for our office-chair sale: 20% off in November.", "see": "Claude asks you to connect Canva, then a new design appears in your Canva account.", "files": [], "install": ["/plugin install canva@claude-plugins-official"], "remove": ["/plugin uninstall canva@claude-plugins-official"], "gets": "Installs the Canva plugin and its skills.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "save-to-spotify", "by": "Third-party plugin", "src": "official", "cat": "wow", "img": "1478737270239-2f02b77fc618", "what": "Turns text into narrated audio episodes and saves them to Spotify.", "flag": "Connects to your Spotify account.", "prompt": "Turn meeting-notes.txt into a 2-minute narrated audio summary and save it to Spotify.", "see": "Claude asks you to connect Spotify, then the episode appears there.", "files": ["meeting-notes.txt"], "install": ["/plugin install save-to-spotify@claude-plugins-official"], "remove": ["/plugin uninstall save-to-spotify@claude-plugins-official"], "gets": "Installs this skill as a plugin.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "xlsx", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1504868584819-f8e8b4b6d7e3", "what": "Creates and edits Excel files with formulas, formatting and charts.", "flag": "May need extra software on your computer.", "prompt": "Use the xlsx skill to turn sales.csv into an Excel file with a total per product, a total per month and a chart. Save it as sales-report.xlsx.", "see": "sales-report.xlsx in the folder. Open it in Excel to see totals and a chart.", "files": ["sales.csv"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install document-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall document-skills@anthropic-agent-skills"], "gets": "Installs the <b>document-skills</b> pack: Word, Excel, PowerPoint and PDF.", "url": "https://github.com/anthropics/skills/tree/main/skills/xlsx"},
+{"name": "docx", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1455390582262-044cdead277a", "what": "Creates and edits Word files, including comments and tracked changes.", "flag": "May need extra software on your computer.", "prompt": "Use the docx skill to write a one-page Word report on the top 3 complaints in customer-feedback.txt, with one fix for each. Save it as complaints-report.docx.", "see": "complaints-report.docx in the folder, ready to open in Word.", "files": ["customer-feedback.txt"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install document-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall document-skills@anthropic-agent-skills"], "gets": "Installs the <b>document-skills</b> pack: Word, Excel, PowerPoint and PDF.", "url": "https://github.com/anthropics/skills/tree/main/skills/docx"},
+{"name": "pptx", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1557804506-669a67965ba0", "what": "Creates and edits PowerPoint presentations.", "flag": "May need extra software on your computer.", "prompt": "Use the pptx skill to make a 5-slide PowerPoint from meeting-notes.txt. Save it as team-update.pptx.", "see": "team-update.pptx in the folder. Open it in PowerPoint.", "files": ["meeting-notes.txt"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install document-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall document-skills@anthropic-agent-skills"], "gets": "Installs the <b>document-skills</b> pack: Word, Excel, PowerPoint and PDF.", "url": "https://github.com/anthropics/skills/tree/main/skills/pptx"},
+{"name": "pdf", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1586281380349-632531db7ed4", "what": "Reads, fills, merges and splits PDF files.", "flag": "May need extra software on your computer.", "prompt": "Use the pdf skill to extract the price table from supplier-price-list.pdf into a file called supplier-prices.csv.", "see": "supplier-prices.csv with all 12 products and their prices.", "files": ["supplier-price-list.pdf"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install document-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall document-skills@anthropic-agent-skills"], "gets": "Installs the <b>document-skills</b> pack: Word, Excel, PowerPoint and PDF.", "url": "https://github.com/anthropics/skills/tree/main/skills/pdf"},
+{"name": "internal-comms", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1522071820081-009f0129c71c", "what": "Writes status reports, newsletters and FAQs in your company's style.", "prompt": "Use the internal-comms skill to write a 3P update (progress, plans, problems) from meeting-notes.txt.", "see": "A short update in three parts: progress, plans and problems.", "files": ["meeting-notes.txt"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/internal-comms"},
+{"name": "doc-coauthoring", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1434030216411-0b793f4b4173", "what": "Writes a proposal or document together with you, section by section.", "prompt": "Use the doc-coauthoring skill to help me write a one-page proposal to hire a second delivery company. Use meeting-notes.txt and customer-feedback.txt.", "see": "Claude asks you questions first, then writes the proposal section by section.", "files": ["meeting-notes.txt", "customer-feedback.txt"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring"},
+{"name": "brand-guidelines", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1502691876148-a84978e59af8", "what": "Applies brand colors and fonts to everything Claude makes.", "flag": "Uses Anthropic's brand. Copy it and change it to yours.", "prompt": "Use the brand-guidelines skill to make a one-page HTML summary of sales.csv in that brand's colors and fonts.", "see": "A summary page in Anthropic's brand colors. Imagine it with your own brand.", "files": ["sales.csv"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install example-skills@anthropic-agent-skills"], "remove": ["/plugin uninstall example-skills@anthropic-agent-skills"], "gets": "Installs Anthropic's <b>example-skills</b> pack: 12 skills, this one included.", "url": "https://github.com/anthropics/skills/tree/main/skills/brand-guidelines"},
+{"name": "invoice-organizer", "by": "ComposioHQ", "src": "community", "cat": "business", "img": "1554224154-26032ffc0d07", "what": "Reads invoices and receipts, pulls out the data, and renames the files.", "flag": "It renames files. Use a copy of the folder.", "prompt": "Use the invoice-organizer skill on the invoices folder. Rename each file by date, supplier and amount, and make a summary table.", "see": "4 clearly named invoices and a table: $11,990.10 in total, from 4 suppliers.", "files": ["invoices/"], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill invoice-organizer -a claude-code --copy -y"], "remove": ["npx skills remove invoice-organizer"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/invoice-organizer"},
+{"name": "lead-research-assistant", "by": "ComposioHQ", "src": "community", "cat": "business", "img": "1460925895917-afdab827c52f", "what": "Finds and qualifies potential customers, and suggests how to reach them.", "prompt": "Use the lead-research-assistant skill. We are Greenleaf: we sell office supplies and chairs to small businesses in Tel Aviv. Find 10 types of companies that could be good customers, and how to reach them.", "see": "A list of customer types, why each fits, and outreach ideas.", "files": [], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill lead-research-assistant -a claude-code --copy -y"], "remove": ["npx skills remove lead-research-assistant"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/lead-research-assistant"},
+{"name": "marketing", "by": "Anthropic", "src": "anthropic", "cat": "business", "img": "1533750349088-cd871a92f312", "what": "Plans campaigns, drafts content and checks it against your brand voice.", "flag": "Can connect to apps like Slack, Canva and HubSpot. Optional.", "prompt": "/marketing:campaign-plan Plan a 4-week campaign to win back customers after our October delivery problems. Use customer-feedback.txt and meeting-notes.txt.", "see": "A campaign brief: goals, audiences, key messages, channels, a week-by-week calendar and numbers to track.", "files": ["customer-feedback.txt", "meeting-notes.txt"], "install": ["/plugin marketplace add anthropics/knowledge-work-plugins", "/plugin install marketing@knowledge-work-plugins"], "remove": ["/plugin uninstall marketing@knowledge-work-plugins"], "gets": "Installs the <b>marketing</b> plugin: 7 commands and 5 skills.", "url": "https://github.com/anthropics/knowledge-work-plugins/tree/main/marketing"},
+{"name": "meeting-insights-analyzer", "by": "ComposioHQ", "src": "community", "cat": "business", "img": "1552664730-d307ca884978", "what": "Analyzes meeting transcripts: who spoke most, filler words, leadership style.", "flag": "It analyzes people. Get their consent first.", "prompt": "Use the meeting-insights-analyzer skill on meeting-transcript.txt. Who spoke most, who got interrupted, and what could each person do better?", "see": "Ronit spoke most and cut people off. Plus filler words and tips for each person.", "files": ["meeting-transcript.txt"], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill meeting-insights-analyzer -a claude-code --copy -y"], "remove": ["npx skills remove meeting-insights-analyzer"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/meeting-insights-analyzer"},
+{"name": "csv-data-summarizer", "by": "coffeefuelbump", "src": "community", "cat": "business", "img": "1543286386-713bdd548da4", "what": "Reads a CSV file and gives you insights and charts automatically.", "flag": "May need Python on your computer.", "prompt": "Use the csv-data-summarizer skill to summarize sales.csv.", "see": "Key numbers and charts. Printer paper earns most, office chairs grew most.", "files": ["sales.csv"], "install": ["npx skills add coffeefuelbump/csv-data-summarizer-claude-skill --skill csv-data-summarizer -a claude-code --copy -y"], "remove": ["npx skills remove csv-data-summarizer"], "gets": "Installs only this skill.", "url": "https://github.com/coffeefuelbump/csv-data-summarizer-claude-skill"},
+{"name": "shippo", "by": "Shippo", "src": "official", "cat": "business", "img": "1566576721346-d4a3b4eaeb55", "what": "Compares shipping prices across carriers, buys labels and tracks packages.", "flag": "Connects to your account and can spend money.", "prompt": "Use Shippo to compare prices for shipping a 5 kg box from New York to Chicago. Do not buy a label.", "see": "Claude asks you to connect Shippo, then shows prices from several carriers.", "files": [], "install": ["/plugin install shippo@claude-plugins-official"], "remove": ["/plugin uninstall shippo@claude-plugins-official"], "gets": "Installs the Shippo plugin and its skills.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "project-artifact", "by": "Anthropic", "src": "official", "cat": "business", "img": "1531403009284-440f080d1e12", "what": "Creates a living project status page you can share with others.", "prompt": "Use project-artifact to create a status page for our delivery-problem project, based on meeting-notes.txt.", "see": "A link to a shareable status page with goals, owners and next steps.", "files": ["meeting-notes.txt"], "install": ["/plugin install project-artifact@claude-plugins-official"], "remove": ["/plugin uninstall project-artifact@claude-plugins-official"], "gets": "Installs this skill as a plugin.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "master-claude-for-legal", "by": "sboghossian", "src": "community", "cat": "business", "img": "1589829545856-d10d557cf95f", "what": "Helps legal teams sort NDAs and compare contract versions.", "flag": "Not legal advice. A lawyer still decides.", "prompt": "Use the master-claude-for-legal skill to review nda-draft.txt. List the risky clauses and what we should ask to change.", "see": "Flags like the 10-year term, unlimited liability and the one-sided rules.", "files": ["nda-draft.txt"], "install": ["npx skills add sboghossian/master-claude-for-legal --skill master-claude-for-legal -a claude-code --copy -y"], "remove": ["npx skills remove master-claude-for-legal"], "gets": "Installs only this skill.", "url": "https://github.com/sboghossian/master-claude-for-legal"},
+{"name": "skill-creator", "by": "Anthropic", "src": "official", "cat": "productivity", "img": "1620712943543-bcc4688e7485", "what": "Helps you build your own skill by asking you questions.", "prompt": "Use the skill-creator skill to help me create a skill that writes our weekly sales summary from sales.csv.", "see": "Claude asks a few questions, then creates a new skill folder you can use.", "files": ["sales.csv"], "install": ["/plugin install skill-creator@claude-plugins-official"], "remove": ["/plugin uninstall skill-creator@claude-plugins-official"], "gets": "Installs this skill as a plugin.", "url": "https://github.com/anthropics/claude-plugins-official"},
+{"name": "file-organizer", "by": "ComposioHQ", "src": "community", "cat": "productivity", "img": "1544396821-4dd40b938ad3", "what": "Sorts messy folders, finds duplicates and suggests a better structure.", "flag": "It moves files. Ask for a plan first.", "prompt": "Use the file-organizer skill on messy-folder. Suggest a better structure and find duplicates. Don't move anything until I approve.", "see": "A plan with folders and a list of duplicates, like the two copies of sales.", "files": ["messy-folder/"], "install": ["npx skills add ComposioHQ/awesome-claude-skills --skill file-organizer -a claude-code --copy -y"], "remove": ["npx skills remove file-organizer"], "gets": "Installs only this skill.", "url": "https://github.com/ComposioHQ/awesome-claude-skills/blob/master/file-organizer"},
+{"name": "brainstorming", "by": "obra (Superpowers pack)", "src": "official", "cat": "productivity", "img": "1507925921958-8a62f3d1a50d", "what": "Turns a rough idea into a clear plan by asking smart questions.", "prompt": "Use the brainstorming skill to help me plan a loyalty program for our business customers.", "see": "Questions one at a time, then a clear plan with options to choose from.", "files": [], "install": ["/plugin install superpowers@claude-plugins-official"], "remove": ["/plugin uninstall superpowers@claude-plugins-official"], "gets": "Installs the <b>Superpowers</b> pack. Brainstorming is one of its skills.", "url": "https://github.com/obra/superpowers"},
+{"name": "discernment-nudge", "by": "Anthropic", "src": "anthropic", "cat": "productivity", "img": "1532012197267-da84d127e765", "what": "Adds two or three questions after an answer, to help you check the facts.", "prompt": "Based on customer-feedback.txt, should we switch delivery company?", "see": "An answer, then 2 or 3 questions that help you check it before you decide.", "files": ["customer-feedback.txt"], "install": ["/plugin marketplace add anthropics/skills", "/plugin install discernment-nudge@anthropic-agent-skills"], "remove": ["/plugin uninstall discernment-nudge@anthropic-agent-skills"], "gets": "Installs this skill as a plugin.", "url": "https://github.com/anthropics/skills/tree/main/skills/discernment-nudge"}
+];
+
+const CATS = {all:"All", top:"Top 10 visual", wow:"Wow & fun", gaming:"Gaming", business:"Business", productivity:"Productivity"};
+const CAT_LABEL = {wow:"Wow & fun", gaming:"Gaming", business:"Business", productivity:"Productivity"};
+const SRC = {
+  anthropic:["lv-anthropic", "Made by Anthropic"],
+  official:["lv-official", "Official marketplace"],
+  vendor:["lv-anthropic", "Official, from the tool's maker"],
+  community:["lv-community", "Community: check first"]
+};
+const state = {cat:"all", q:"", anthropicOnly:false};
+
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+const DONE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+/* Display only: keep words whole (non-breaking hyphens) and allow line breaks after "@" and "owner/".
+   The copy button copies the original text from data-copy. */
+const pretty = t => esc(t).replace(/-/g, "‑").replace(/@/g, "@<wbr>").replace(/(\w)\//g, "$1/<wbr>");
+const isNpx = s => s.install[0].startsWith("npx");
+
+function cmdRow(text, n, cls){
+  return `<div class="cmdrow${cls ? " " + cls : ""}">${n ? `<span class="stepno">${n}</span>` : ""}<code data-copy="${esc(text)}">${cls ? esc(text) : pretty(text)}</code><button class="cp" type="button" title="Copy" aria-label="Copy">${COPY_ICON}</button></div>`;
+}
+const cmdRows = list => list.map((c, i) => cmdRow(c, list.length > 1 ? i + 1 : 0)).join("");
+
+function vsHint(s){
+  if (isNpx(s)) return "In VS Code: Terminal &gt; New Terminal opens one in the practice folder.";
+  const plugin = s.install[s.install.length - 1].replace("/plugin install ", "").split("@")[0];
+  if (s.install.length > 1) {
+    const repo = s.install[0].replace("/plugin marketplace add ", "");
+    return `In the VS Code panel: type <b>/plugins</b>, add <code>${repo}</code> on the Marketplaces tab, then install <b>${plugin}</b>.`;
+  }
+  return `In the VS Code panel: type <b>/plugins</b> and install <b>${plugin}</b>.`;
+}
+
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function installLead(s){
+  if (isNpx(s)) return "Run this in a terminal. It needs Node.js.";
+  return s.install.length > 1 ? "Type these in Claude Code, one at a time." : "Type this in Claude Code.";
+}
+
+/* The 5 steps that drop down under the example. */
+function steps(s){
+  const files = s.files.length ? "It uses: " + s.files.map(f => `<code>${f}</code>`).join(" ") : "No files needed for this one.";
+  return `<ol class="howto-steps">
+      <li><b>Open the practice folder</b><span>Open <code>${FOLDER}</code> in VS Code. ${files}</span></li>
+      <li><b>Install it</b><span>${installLead(s)}</span>${cmdRows(s.install)}<span class="small-hint">${s.gets}</span><span class="small-hint">${vsHint(s)}</span></li>
+      <li><b>Start a new chat and ask</b>${cmdRow(s.prompt, 0, "prompt")}</li>
+      <li><b>What you'll see</b><span>${s.see}</span></li>
+      <li><b>Remove it when you're done</b>${cmdRows(s.remove)}</li>
+    </ol>`;
+}
+
+const gid = s => "guide-" + s.name.replace(/[^\w-]/g, "-");
+
+function card(s){
+  const [cls, label] = SRC[s.src];
+  return `<article class="card">
+    <div class="pic ${s.cat}"><img src="${IMG(s.img)}" alt="" loading="lazy" onerror="this.remove()"><span class="cat">${CAT_LABEL[s.cat]}</span></div>
+    <div class="body">
+      <div class="badges">${s.top ? `<span class="level lv-top" style="margin:0">Top pick</span>` : ""}<span class="level ${cls}" style="margin:0">${label}</span></div>
+      <p class="name">${s.name}</p>
+      <p class="by">by ${s.by}</p>
+      <p class="what">${s.what}</p>
+      ${s.wow ? `<p class="rating">WOW ${s.wow} &middot; Setup: ${s.setup}</p>` : ""}
+      ${s.flag ? `<div class="flag">${s.flag}</div>` : ""}
+      <div class="example"><b>Example</b>${esc(s.prompt).replace(/-/g, "‑")}</div>
+      <div class="guide">
+        <button class="guide-toggle" type="button" aria-expanded="false" aria-controls="${gid(s)}"><span class="hover-label">Hover to see instructions</span><span class="tap-label">Tap to see instructions</span>${CHEV}</button>
+        <div class="guide-body" id="${gid(s)}" role="region" aria-label="How to try ${s.name}"><div class="guide-inner">${steps(s)}</div></div>
+      </div>
+      <div class="get"><a href="${s.url}" target="_blank" rel="noopener">See details on GitHub</a></div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const list = SKILLS.filter(s =>
+    (state.cat === "all" || (state.cat === "top" ? !!s.wow : s.cat === state.cat)) &&
+    (!state.anthropicOnly || s.by === "Anthropic") &&
+    (!q || (s.name + " " + s.by + " " + s.what + " " + s.prompt).toLowerCase().includes(q)));
+  document.getElementById("cards").innerHTML = list.map(card).join("") ||
+    `<p class="muted">No skill matches that search.</p>`;
+  document.getElementById("count").textContent = list.length + " of " + SKILLS.length + " skills";
+}
+
+const filters = document.getElementById("filters");
+Object.keys(CATS).forEach(k => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.textContent = CATS[k];
+  b.style.marginRight = "6px";
+  b.setAttribute("aria-pressed", String(k === state.cat));
+  b.onclick = () => {
+    state.cat = k;
+    filters.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    render();
+  };
+  filters.appendChild(b);
+});
+document.getElementById("trustOnly").onclick = e => {
+  state.anthropicOnly = !state.anthropicOnly;
+  e.currentTarget.setAttribute("aria-pressed", String(state.anthropicOnly));
+  render();
+};
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+
+/* Cards: copy buttons, and the instructions panel.
+   With a mouse it opens on hover and closes when the mouse leaves the panel. On touch screens a tap opens and closes it. */
+const cardsEl = document.getElementById("cards");
+const setGuide = (g, open) => {
+  g.classList.toggle("open", open);
+  g.querySelector(".guide-toggle").setAttribute("aria-expanded", String(open));
+};
+cardsEl.addEventListener("click", e => {
+  const btn = e.target.closest(".cp");
+  if (btn) {
+    const text = btn.parentElement.querySelector("code").dataset.copy;
+    const ok = () => {
+      btn.innerHTML = DONE_ICON; btn.classList.add("ok"); btn.setAttribute("aria-label", "Copied");
+      setTimeout(() => { btn.innerHTML = COPY_ICON; btn.classList.remove("ok"); btn.setAttribute("aria-label", "Copy"); }, 1500);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (err) {}
+      document.body.removeChild(ta); ok();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+    else fallback();
+    return;
+  }
+  const toggle = e.target.closest(".guide-toggle");
+  if (toggle) {
+    const g = toggle.closest(".guide");
+    setGuide(g, !g.classList.contains("open"));
+  }
+});
+cardsEl.addEventListener("mouseout", e => {
+  const g = e.target.closest(".guide");
+  if (g && !g.contains(e.relatedTarget)) setGuide(g, false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".guide.open").forEach(g => setGuide(g, false));
+});
+
+document.getElementById("mosaic").innerHTML = ["1541701494587-cb58502866ab","1634017839464-5c339ebe3cb4","1504868584819-f8e8b4b6d7e3","1485846234645-a62644f84728","1557804506-669a67965ba0","1493711662062-fa541adb3fc8","1563089145-599997674d42","1551288049-bebda4e38f71","1620712943543-bcc4688e7485","1525909002-1b05e0c869d8","1478737270239-2f02b77fc618","1547658719-da2b51169166"]
+  .map(id => `<img src="${IMG(id)}" alt="" onerror="this.style.visibility='hidden'">`).join("");
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+month,product,region,units,unit_price_usd,revenue_usd,revenue_same_month_last_year_usd
+2025-11,Ink cartridge,North,126,45,5670,5490
+2025-11,Ink cartridge,South,94,45,4230,4095
+2025-11,Office chair,North,20,189,3780,3193
+2025-11,Office chair,South,15,189,2835,2394
+2025-11,Printer paper (box),North,234,32,7488,7713
+2025-11,Printer paper (box),South,176,32,5632,5801
+2025-12,Ink cartridge,North,119,45,5355,4933
+2025-12,Ink cartridge,South,89,45,4005,3689
+2025-12,Office chair,North,19,189,3591,2886
+2025-12,Office chair,South,14,189,2646,2126
+2025-12,Printer paper (box),North,221,32,7072,6931
+2025-12,Printer paper (box),South,166,32,5312,5206
+2026-01,Ink cartridge,North,140,45,6300,5804
+2026-01,Ink cartridge,South,105,45,4725,4353
+2026-01,Office chair,North,22,189,4158,3341
+2026-01,Office chair,South,16,189,3024,2430
+2026-01,Printer paper (box),North,260,32,8320,8154
+2026-01,Printer paper (box),South,195,32,6240,6115
+2026-02,Ink cartridge,North,133,45,5985,5795
+2026-02,Ink cartridge,South,100,45,4500,4357
+2026-02,Office chair,North,21,189,3969,3352
+2026-02,Office chair,South,16,189,3024,2554
+2026-02,Printer paper (box),North,247,32,7904,8141
+2026-02,Printer paper (box),South,185,32,5920,6098
+2026-03,Ink cartridge,North,140,45,6300,5804
+2026-03,Ink cartridge,South,105,45,4725,4353
+2026-03,Office chair,North,22,189,4158,3341
+2026-03,Office chair,South,16,189,3024,2430
+2026-03,Printer paper (box),North,260,32,8320,8154
+2026-03,Printer paper (box),South,195,32,6240,6115
+2026-04,Ink cartridge,North,126,45,5670,5223
+2026-04,Ink cartridge,South,94,45,4230,3897
+2026-04,Office chair,North,20,189,3780,3038
+2026-04,Office chair,South,15,189,2835,2278
+2026-04,Printer paper (box),North,234,32,7488,7338
+2026-04,Printer paper (box),South,176,32,5632,5519
+2026-05,Ink cartridge,North,112,45,5040,4880
+2026-05,Ink cartridge,South,84,45,3780,3660
+2026-05,Office chair,North,18,189,3402,2873
+2026-05,Office chair,South,13,189,2457,2075
+2026-05,Printer paper (box),North,208,32,6656,6856
+2026-05,Printer paper (box),South,156,32,4992,5142
+2026-06,Ink cartridge,North,161,45,7245,6674
+2026-06,Ink cartridge,South,121,45,5445,5016
+2026-06,Office chair,North,25,189,4725,3797
+2026-06,Office chair,South,19,189,3591,2886
+2026-06,Printer paper (box),North,299,32,9568,9377
+2026-06,Printer paper (box),South,224,32,7168,7025
+2026-07,Ink cartridge,North,175,45,7875,7254
+2026-07,Ink cartridge,South,131,45,5895,5430
+2026-07,Office chair,North,28,189,5292,4253
+2026-07,Office chair,South,21,189,3969,3189
+2026-07,Printer paper (box),North,325,32,10400,10192
+2026-07,Printer paper (box),South,244,32,7808,7652
+2026-08,Ink cartridge,North,147,45,6615,6405
+2026-08,Ink cartridge,South,110,45,4950,4793
+2026-08,Office chair,North,23,189,4347,3671
+2026-08,Office chair,South,17,189,3213,2714
+2026-08,Printer paper (box),North,273,32,8736,8998
+2026-08,Printer paper (box),South,205,32,6560,6757
+2026-09,Ink cartridge,North,140,45,6300,5804
+2026-09,Ink cartridge,South,105,45,4725,4353
+2026-09,Office chair,North,22,189,4158,3341
+2026-09,Office chair,South,16,189,3024,2430
+2026-09,Printer paper (box),North,260,32,8320,8154
+2026-09,Printer paper (box),South,195,32,6240,6115
+2026-10,Ink cartridge,North,133,45,5985,5513
+2026-10,Ink cartridge,South,100,45,4500,4145
+2026-10,Office chair,North,21,189,3969,3189
+2026-10,Office chair,South,16,189,3024,2430
+2026-10,Printer paper (box),North,247,32,7904,7746
+2026-10,Printer paper (box),South,185,32,5920,5802

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "greenleaf": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--python", "3.12", "--with", "mcp[cli]>=2", "mcp", "run", "server.py"]
+    }
+  }
+}

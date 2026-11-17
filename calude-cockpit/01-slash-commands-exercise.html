@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slash Commands Exercise</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 80px}
+  header{padding:44px 0 18px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:clamp(28px,5vw,40px);line-height:1.15;margin:8px 0 12px}
+  .lede{font-size:18px;color:var(--muted);margin:0}
+  .lede span{display:block}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px;font-size:.92em}
+  .box{border-radius:12px;padding:16px 20px;margin:18px 0}
+  .box.tip{background:var(--ok-soft)}
+  .box.warn{background:var(--warn-soft)}
+  .box h2{font-size:17px;margin:0 0 6px}
+  .box ul{margin:0;padding-left:20px}
+  .box li{margin:3px 0}
+  .progress{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted)}
+  .bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0;transition:border-color .2s}
+  .step.done{border-color:var(--ok)}
+  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
+  .step.done .num{background:var(--ok)}
+  .step h2{font-size:20px;margin:0;flex:1;line-height:1.25}
+  .cmds{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+  .cmds code{color:var(--accent);background:var(--accent-soft);font-weight:700}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:14px 0 6px}
+  ol.do{margin:0;padding-left:22px}
+  ol.do li{margin:5px 0}
+  .alt{font-size:14px;color:var(--muted)}
+  .type{display:flex;align-items:stretch;gap:0;margin:6px 0 2px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .type code{flex:1;background:var(--code);border-radius:0;padding:8px 12px;font-size:14px;overflow-wrap:anywhere}
+  .type button{flex:none;border:0;border-left:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;padding:0 14px;cursor:pointer}
+  .type button.ok{color:var(--ok);font-weight:700}
+  .check{background:var(--warn-soft);border-radius:10px;padding:10px 14px;margin-top:12px}
+  .check p{margin:0;font-weight:600}
+  details{margin-top:6px}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+  details div{margin-top:6px}
+  .donebox{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;color:var(--muted);cursor:pointer;width:max-content}
+  .donebox input{width:18px;height:18px;accent-color:var(--ok)}
+  .finish{background:var(--surface);border:2px solid var(--ok);border-radius:14px;padding:20px;margin-top:24px}
+  .finish h2{margin:0 0 8px}
+  .finish .cmds{margin-top:8px}
+  button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media print{ .progress,.type button{display:none} body{background:#fff} .step{break-inside:avoid} details{display:block} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Lesson one &middot; Topic 1 &middot; Exercise</div>
+  <h1>Exercise: slash commands in VS Code</h1>
+  <p class="lede">
+    <span>Ten short steps, about 30 minutes.</span>
+    <span>You will use real commands on real practice files.</span>
+    <span>Each step ends with a question, so you can check yourself.</span>
+  </p>
+</header>
+
+<div class="box tip">
+  <h2>You need</h2>
+  <ul>
+    <li>VS Code with the Claude Code extension, signed in.</li>
+    <li>The <code>demo-folder</code> from your instructor, saved on your computer.</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <h2>If a command is missing</h2>
+  <ul>
+    <li>The VS Code panel has only some of the commands.</li>
+    <li>If a command is not in the <code>/</code> menu, use the button shown under it.</li>
+    <li>Claude's answers change a little each time. That is normal.</li>
+  </ul>
+</div>
+
+<div class="progress" aria-live="polite"><span id="count">0 of 10 done</span><div class="bar"><i id="fill"></i></div></div>
+
+<!-- 1 -->
+<section class="step">
+  <div class="step-head"><span class="num">1</span><h2>Open the practice folder</h2></div>
+  <ol class="do">
+    <li>Open VS Code.</li>
+    <li>Click <b>File &gt; Open Folder</b> and choose <code>demo-folder</code>.</li>
+    <li>Update the Claude Code extension if VS Code offers it. Newer versions have more commands.</li>
+    <li>Click <b>✻ Claude Code</b> in the bar at the bottom of VS Code.</li>
+    <li>Start a new conversation.</li>
+  </ol>
+  <div class="check"><p>Can you see the three files on the left: feedback, sales and meeting notes?</p></div>
+</section>
+
+<!-- 2 -->
+<section class="step">
+  <div class="step-head"><span class="num">2</span><h2>Find any command in two seconds</h2></div>
+  <div class="cmds"><code>/</code></div>
+  <ol class="do">
+    <li>In the Claude Code box, type just <code>/</code>.</li>
+    <li>Scroll the menu. These are all your commands.</li>
+    <li>Now type <code>/mo</code>.</li>
+  </ol>
+  <div class="check"><p>What happened to the menu when you typed <code>/mo</code>?</p>
+    <details><summary>Check your answer</summary><div>It shrinks to the matching commands, like <code>/model</code>. You never need to memorize commands.</div></details>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step">
+  <div class="step-head"><span class="num">3</span><h2>Ask Claude about your customers</h2></div>
+  <div class="cmds"><code>/context</code></div>
+  <ol class="do">
+    <li>Ask Claude this question:
+      <div class="type"><code>Read customer-feedback.txt. What are the top 3 complaints?</code><button type="button">Copy</button></div>
+    </li>
+    <li>Then type <code>/context</code> to see how full Claude's memory is.
+      <div class="alt">Not in the menu? Look at the memory indicator in the prompt box.</div>
+    </li>
+  </ol>
+  <div class="check"><p>What are the top 3 complaints?</p>
+    <details><summary>Check your answer</summary><div>1. Late deliveries (the most common, 6 customers). 2. Wrong items in the order. 3. Slow customer service replies.</div></details>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step">
+  <div class="step-head"><span class="num">4</span><h2>Give your chat a name</h2></div>
+  <div class="cmds"><code>/rename</code></div>
+  <ol class="do">
+    <li>Type:
+      <div class="type"><code>/rename feedback-review</code><button type="button">Copy</button></div>
+      <div class="alt">Not in the menu? Open <b>Session history</b> at the top of the panel. Hover your chat and click <b>Rename</b>.</div>
+    </li>
+    <li>Open <b>Session history</b> and find your chat.</li>
+  </ol>
+  <div class="check"><p>Is your chat now called <i>feedback-review</i>?</p>
+    <details><summary>Check your answer</summary><div>Yes. Named chats are easy to find again in step 5.</div></details>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step">
+  <div class="step-head"><span class="num">5</span><h2>Start fresh, then come back</h2></div>
+  <div class="cmds"><code>/clear</code><code>/resume</code></div>
+  <ol class="do">
+    <li>Type <code>/clear</code>. This starts a brand-new chat.
+      <div class="alt">Not in the menu? Press <b>Ctrl+Shift+P</b>, type <i>Claude Code</i>, choose <b>Open in New Tab</b>.</div>
+    </li>
+    <li>Ask: <div class="type"><code>What were the top 3 complaints?</code><button type="button">Copy</button></div></li>
+    <li>Now type <code>/resume</code> and pick <i>feedback-review</i>.
+      <div class="alt">Not in the menu? Click <b>Session history</b> and pick <i>feedback-review</i>.</div>
+    </li>
+    <li>Ask the same question again.</li>
+  </ol>
+  <div class="check"><p>What was different between the two answers?</p>
+    <details><summary>Check your answer</summary><div>After <code>/clear</code>, Claude did not know. After <code>/resume</code>, it remembered everything. Clear for a new task, resume to continue an old one.</div></details>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step">
+  <div class="step-head"><span class="num">6</span><h2>Try a different model</h2></div>
+  <div class="cmds"><code>/model</code></div>
+  <ol class="do">
+    <li>Type <code>/model</code>.
+      <div class="alt">Not in the menu? Click the model name at the bottom of the prompt box.</div>
+    </li>
+    <li>Pick a different model from the list.</li>
+    <li>Ask: <div class="type"><code>Write a two-line thank-you to Yossi M. for praising our driver.</code><button type="button">Copy</button></div></li>
+    <li>Switch back to your first model when you are done.</li>
+  </ol>
+  <div class="check"><p>Which model did you pick, and did the answer feel different?</p>
+    <details><summary>Check your answer</summary><div>Any answer is fine. Faster, cheaper models are great for small jobs like this one. Save the strongest model for hard work.</div></details>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step">
+  <div class="step-head"><span class="num">7</span><h2>Make Claude plan before it acts</h2></div>
+  <div class="cmds"><code>/plan</code></div>
+  <ol class="do">
+    <li>Type:
+      <div class="type"><code>/plan Add a short section called "Top customer complaints" at the end of meeting-notes.txt, based on customer-feedback.txt.</code><button type="button">Copy</button></div>
+      <div class="alt">Not in the menu? Click the mode at the bottom of the prompt box and choose <b>Plan</b>. Then type the task.</div>
+    </li>
+    <li>Read the plan. Nothing has changed yet.</li>
+    <li>Approve the plan when Claude asks.</li>
+    <li>Open <code>meeting-notes.txt</code> and scroll to the end.</li>
+  </ol>
+  <div class="check"><p>When did the file actually change: before or after you approved?</p>
+    <details><summary>Check your answer</summary><div>Only after you approved. Plan first, act second. You stay the manager.</div></details>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="step">
+  <div class="step-head"><span class="num">8</span><h2>Undo it with rewind</h2></div>
+  <div class="cmds"><code>/rewind</code></div>
+  <ol class="do">
+    <li>Hover over your <code>/plan</code> message in the chat.</li>
+    <li>Click the rewind button. Choose <b>Rewind code to here</b>.
+      <div class="alt">Or type <code>/rewind</code> and choose to restore the code.</div>
+    </li>
+    <li>Open <code>meeting-notes.txt</code> again and scroll to the end.</li>
+  </ol>
+  <div class="check"><p>Is the new section still there?</p>
+    <details><summary>Check your answer</summary><div>No. The file is back to the original. Rewind is a safety net, so you can experiment freely.</div></details>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step">
+  <div class="step-head"><span class="num">9</span><h2>Turn numbers into a chart</h2></div>
+  <div class="cmds"><code>/dataviz</code><code>/btw</code></div>
+  <ol class="do">
+    <li>Type:
+      <div class="type"><code>/dataviz Make a chart of monthly revenue for each product from sales.csv.</code><button type="button">Copy</button></div>
+    </li>
+    <li>Open the chart or the file Claude created.</li>
+    <li>Quick side question, without cluttering the chat:
+      <div class="type"><code>/btw what does YoY mean?</code><button type="button">Copy</button></div>
+    </li>
+  </ol>
+  <div class="check"><p>What kind of chart did you get? Which product brings in the most money? Which grew the most since last year?</p>
+    <details><summary>Check your answer</summary><div>Usually a line or bar chart. Both are fine. Printer paper brings in the most money (about $172,000 in the year). Office chairs grew the most, about 22% more than last year. The best month was July 2026.</div></details>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="step">
+  <div class="step-head"><span class="num">10</span><h2>Take the answer with you</h2></div>
+  <div class="cmds"><code>/copy</code></div>
+  <ol class="do">
+    <li>Ask: <div class="type"><code>Write a short email to the team with the top 3 complaints and one fix for each.</code><button type="button">Copy</button></div></li>
+    <li>Type <code>/copy</code>.</li>
+    <li>Paste it into Notepad or a new email.</li>
+  </ol>
+  <div class="check"><p>Did the full email paste in, ready to send?</p>
+    <details><summary>Check your answer</summary><div>Yes. One command takes Claude's answer straight into your email.</div></details>
+  </div>
+</section>
+
+<div class="finish">
+  <h2>Well done. You used 10 commands today.</h2>
+  <div class="cmds"><code>/</code><code>/context</code><code>/rename</code><code>/clear</code><code>/resume</code><code>/model</code><code>/plan</code><code>/rewind</code><code>/dataviz</code><code>/btw</code><code>/copy</code></div>
+  <p style="margin:8px 0 0">Bonus question: which three would you teach a new employee first?</p>
+</div>
+
+</div>
+
+<script>
+(function(){
+  var steps = Array.prototype.slice.call(document.querySelectorAll(".step"));
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem("slash-exercise-done") || "[]"); } catch(e){}
+  steps.forEach(function(s, i){
+    var label = document.createElement("label");
+    label.className = "donebox";
+    label.innerHTML = '<input type="checkbox"> I did this step';
+    var box = label.querySelector("input");
+    box.checked = saved.indexOf(i) !== -1;
+    box.addEventListener("change", update);
+    s.appendChild(label);
+  });
+  function update(){
+    var done = [];
+    steps.forEach(function(s, i){
+      var on = s.querySelector(".donebox input").checked;
+      s.classList.toggle("done", on);
+      if (on) done.push(i);
+    });
+    document.getElementById("count").textContent = done.length + " of " + steps.length + " done";
+    document.getElementById("fill").style.width = (done.length / steps.length * 100) + "%";
+    try { localStorage.setItem("slash-exercise-done", JSON.stringify(done)); } catch(e){}
+  }
+  update();
+
+  document.querySelectorAll(".type button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var text = btn.previousElementSibling.textContent;
+      var ok = function(){ btn.textContent = "Copied"; btn.classList.add("ok"); setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("ok"); }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok, function(){ fallback(text); ok(); });
+      } else { fallback(text); ok(); }
+    });
+  });
+  function fallback(text){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+  }
+})();
+</script>
+</body>
+</html>

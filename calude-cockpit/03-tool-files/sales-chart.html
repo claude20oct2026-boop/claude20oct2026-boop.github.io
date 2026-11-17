@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Greenleaf sales chart</title>
+<style>
+  /* Colour roles. Light values first, dark values swapped in two scopes:
+     the OS setting, and an explicit data-theme="dark" stamp. */
+  :root{
+    color-scheme:light;
+    --page:#f9f9f7; --surface:#fcfcfb;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+    --good:#006300; --bad:#d03b3b;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --page:#0d0d0d; --surface:#1a1a19;
+      --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+      --good:#0ca30c; --bad:#d03b3b;
+      --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --good:#0ca30c; --bad:#d03b3b;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+    font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:920px;margin:0 auto;padding:32px 16px 48px}
+  .eyebrow{margin:0 0 4px;color:var(--ink-2);font-size:14px}
+  h1{margin:0 0 20px;font-size:clamp(22px,4vw,28px);line-height:1.2;font-weight:650}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px}
+
+  .hero-num{font-size:clamp(48px,9vw,60px);line-height:1.05;font-weight:650;letter-spacing:-.02em}
+  .hero-label{margin-top:4px;color:var(--ink-2)}
+  .delta{margin-top:8px;font-weight:600}
+  .delta.up{color:var(--good)}
+  .delta.down{color:var(--bad)}
+  .insight{margin:12px 0 0;color:var(--ink-2)}
+  .insight span{display:block}
+  .delta,.insight span,.note span{text-wrap:balance}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;
+    margin:24px 0 8px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin:0;padding:0;list-style:none;font-size:14px}
+  .legend li{display:flex;align-items:center;gap:8px}
+  .key{display:inline-block;width:18px;height:0;border-top:2px solid var(--ink-2);border-radius:2px}
+  button{font:inherit;font-size:14px;color:var(--ink);background:transparent;
+    border:1px solid var(--axis);border-radius:8px;padding:6px 12px;cursor:pointer}
+  button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+  :focus-visible{outline:2px solid var(--ink-2);outline-offset:2px}
+
+  .chartwrap{position:relative}
+  svg{display:block;width:100%;overflow:visible}
+  svg text{font-family:inherit}
+
+  .tip{position:absolute;top:0;left:0;pointer-events:none;z-index:2;min-width:230px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    box-shadow:0 6px 24px rgba(0,0,0,.14);padding:10px 12px;font-size:13px}
+  .tip[hidden]{display:none}
+  .tip-h{font-weight:600;margin-bottom:6px}
+  .tip-rows{display:grid;grid-template-columns:18px auto auto auto;column-gap:8px;row-gap:4px;align-items:center}
+  .tip-row{display:contents}
+  .tip-v{font-weight:650;text-align:right;font-variant-numeric:tabular-nums}
+  .tip-n,.tip-d{color:var(--ink-2)}
+  .tip-d{text-align:right;font-variant-numeric:tabular-nums}
+  .tip-sep{grid-column:1 / -1;border-top:1px solid var(--grid);margin:2px 0}
+  .tip-foot{margin-top:8px;color:var(--ink-2);font-size:12px}
+
+  .tablewrap{overflow-x:auto;margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+  th{text-align:right;font-weight:600;color:var(--ink-2)}
+  td{text-align:right;font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  tfoot td{font-weight:650;border-bottom:0}
+  .tablewrap[hidden],.legend[hidden],.chartwrap[hidden]{display:none}
+
+  .note{margin:16px 0 0;color:var(--ink-2);font-size:14px}
+  .note span{display:block}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Greenleaf Office Supplies</p>
+  <h1>Revenue by product, <span id="range"></span></h1>
+
+  <section class="card">
+    <div class="hero-num" id="heroNum"></div>
+    <div class="hero-label">Total revenue over these 12 months</div>
+    <div class="delta" id="delta"></div>
+    <p class="insight" id="insight"></p>
+
+    <div class="toolbar">
+      <ul class="legend" id="legend" aria-label="Products"></ul>
+      <button type="button" id="viewBtn" aria-pressed="false">View as table</button>
+    </div>
+
+    <div class="chartwrap" id="chartwrap">
+      <svg id="chart" role="img" tabindex="0"
+           aria-label="Line chart of monthly revenue for each product. Use the table view for exact values."></svg>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="tablewrap" id="tablewrap" hidden></div>
+
+    <p class="note">
+      <span>Revenue adds up the North and South regions.</span>
+      <span>Hover over the chart, or use the left and right arrow keys, to read each month.</span>
+    </p>
+  </section>
+</main>
+
+<script>
+(function () {
+  // Data: sales.csv, pasted in so the page works when opened straight from disk.
+  const CSV = `month,product,region,units,unit_price_usd,revenue_usd,revenue_same_month_last_year_usd
+2025-11,Ink cartridge,North,126,45,5670,5490
+2025-11,Ink cartridge,South,94,45,4230,4095
+2025-11,Office chair,North,20,189,3780,3193
+2025-11,Office chair,South,15,189,2835,2394
+2025-11,Printer paper (box),North,234,32,7488,7713
+2025-11,Printer paper (box),South,176,32,5632,5801
+2025-12,Ink cartridge,North,119,45,5355,4933
+2025-12,Ink cartridge,South,89,45,4005,3689
+2025-12,Office chair,North,19,189,3591,2886
+2025-12,Office chair,South,14,189,2646,2126
+2025-12,Printer paper (box),North,221,32,7072,6931
+2025-12,Printer paper (box),South,166,32,5312,5206
+2026-01,Ink cartridge,North,140,45,6300,5804
+2026-01,Ink cartridge,South,105,45,4725,4353
+2026-01,Office chair,North,22,189,4158,3341
+2026-01,Office chair,South,16,189,3024,2430
+2026-01,Printer paper (box),North,260,32,8320,8154
+2026-01,Printer paper (box),South,195,32,6240,6115
+2026-02,Ink cartridge,North,133,45,5985,5795
+2026-02,Ink cartridge,South,100,45,4500,4357
+2026-02,Office chair,North,21,189,3969,3352
+2026-02,Office chair,South,16,189,3024,2554
+2026-02,Printer paper (box),North,247,32,7904,8141
+2026-02,Printer paper (box),South,185,32,5920,6098
+2026-03,Ink cartridge,North,140,45,6300,5804
+2026-03,Ink cartridge,South,105,45,4725,4353
+2026-03,Office chair,North,22,189,4158,3341
+2026-03,Office chair,South,16,189,3024,2430
+2026-03,Printer paper (box),North,260,32,8320,8154
+2026-03,Printer paper (box),South,195,32,6240,6115
+2026-04,Ink cartridge,North,126,45,5670,5223
+2026-04,Ink cartridge,South,94,45,4230,3897
+2026-04,Office chair,North,20,189,3780,3038
+2026-04,Office chair,South,15,189,2835,2278
+2026-04,Printer paper (box),North,234,32,7488,7338
+2026-04,Printer paper (box),South,176,32,5632,5519
+2026-05,Ink cartridge,North,112,45,5040,4880
+2026-05,Ink cartridge,South,84,45,3780,3660
+2026-05,Office chair,North,18,189,3402,2873
+2026-05,Office chair,South,13,189,2457,2075
+2026-05,Printer paper (box),North,208,32,6656,6856
+2026-05,Printer paper (box),South,156,32,4992,5142
+2026-06,Ink cartridge,North,161,45,7245,6674
+2026-06,Ink cartridge,South,121,45,5445,5016
+2026-06,Office chair,North,25,189,4725,3797
+2026-06,Office chair,South,19,189,3591,2886
+2026-06,Printer paper (box),North,299,32,9568,9377
+2026-06,Printer paper (box),South,224,32,7168,7025
+2026-07,Ink cartridge,North,175,45,7875,7254
+2026-07,Ink cartridge,South,131,45,5895,5430
+2026-07,Office chair,North,28,189,5292,4253
+2026-07,Office chair,South,21,189,3969,3189
+2026-07,Printer paper (box),North,325,32,10400,10192
+2026-07,Printer paper (box),South,244,32,7808,7652
+2026-08,Ink cartridge,North,147,45,6615,6405
+2026-08,Ink cartridge,South,110,45,4950,4793
+2026-08,Office chair,North,23,189,4347,3671
+2026-08,Office chair,South,17,189,3213,2714
+2026-08,Printer paper (box),North,273,32,8736,8998
+2026-08,Printer paper (box),South,205,32,6560,6757
+2026-09,Ink cartridge,North,140,45,6300,5804
+2026-09,Ink cartridge,South,105,45,4725,4353
+2026-09,Office chair,North,22,189,4158,3341
+2026-09,Office chair,South,16,189,3024,2430
+2026-09,Printer paper (box),North,260,32,8320,8154
+2026-09,Printer paper (box),South,195,32,6240,6115
+2026-10,Ink cartridge,North,133,45,5985,5513
+2026-10,Ink cartridge,South,100,45,4500,4145
+2026-10,Office chair,North,21,189,3969,3189
+2026-10,Office chair,South,16,189,3024,2430
+2026-10,Printer paper (box),North,247,32,7904,7746
+2026-10,Printer paper (box),South,185,32,5920,5802`;
+
+  // ---------- Data ----------
+  const rows = CSV.trim().split('\n').slice(1).map(function (line) {
+    const c = line.split(',');
+    return { month: c[0], product: c[1], rev: +c[5], ly: +c[6] };
+  });
+  const months = Array.from(new Set(rows.map(function (r) { return r.month; }))).sort();
+  // Colour follows the product, never its rank: sorted by name, slot 1 to 3, fixed.
+  const names = Array.from(new Set(rows.map(function (r) { return r.product; }))).sort();
+  const val = {}, ly = {};
+  names.forEach(function (n) {
+    val[n] = months.map(function () { return 0; });
+    ly[n] = months.map(function () { return 0; });
+  });
+  rows.forEach(function (r) {
+    const i = months.indexOf(r.month);
+    val[r.product][i] += r.rev;
+    ly[r.product][i] += r.ly;
+  });
+  const sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+  const total = months.map(function (_, i) { return sum(names.map(function (n) { return val[n][i]; })); });
+  const totalLY = months.map(function (_, i) { return sum(names.map(function (n) { return ly[n][i]; })); });
+
+  const SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthNo = function (i) { return +months[i].slice(5, 7); };
+  const yearOf = function (i) { return months[i].slice(0, 4); };
+  const shortLabel = function (i) { return SHORT[monthNo(i) - 1]; };
+  const longLabel = function (i) { return LONG[monthNo(i) - 1] + ' ' + yearOf(i); };
+  const fmt = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+  const pct = function (a, b) { return (a / b - 1) * 100; };
+  const arrowPct = function (a, b) {
+    const d = pct(a, b);
+    return (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d).toFixed(0) + '%';
+  };
+
+  const $ = function (id) { return document.getElementById(id); };
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs, parent) {
+    const e = document.createElementNS(NS, name);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function h(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;   // names come from the CSV: textContent only
+    return e;
+  }
+  const colour = function (k) { return 'var(--s' + (k + 1) + ')'; };
+
+  // ---------- Header, legend, insight ----------
+  $('range').textContent = longLabel(0) + ' to ' + longLabel(months.length - 1);
+  $('heroNum').textContent = fmt(sum(total));
+
+  const dTotal = pct(sum(total), sum(totalLY));
+  const deltaEl = $('delta');
+  deltaEl.className = 'delta ' + (dTotal >= 0 ? 'up' : 'down');
+  const arrow = h('span', '', dTotal >= 0 ? '▲ ' : '▼ ');
+  arrow.setAttribute('aria-hidden', 'true');
+  deltaEl.append(arrow, (dTotal >= 0 ? 'Up ' : 'Down ') + Math.abs(dTotal).toFixed(1) +
+    '% on the same 12 months a year earlier');
+
+  const growth = names.map(function (n) { return { n: n, g: pct(sum(val[n]), sum(ly[n])) }; })
+    .sort(function (a, b) { return b.g - a.g; });
+  const say = function (x, word) {
+    return x.n + ' ' + word + ', ' + (x.g >= 0 ? 'up ' : 'down ') + Math.abs(x.g).toFixed(1) + '% on last year.';
+  };
+  $('insight').append(h('span', '', say(growth[0], 'grew fastest')),
+                      h('span', '', say(growth[growth.length - 1], 'grew slowest')));
+
+  names.forEach(function (n, k) {
+    const li = h('li');
+    const key = h('span', 'key');
+    key.style.borderTopColor = colour(k);
+    li.append(key, n);
+    $('legend').appendChild(li);
+  });
+
+  // ---------- Chart ----------
+  const wrap = $('chartwrap'), svg = $('chart'), tip = $('tip');
+  let cur = -1;          // month index being read, -1 = none
+  let geo = null;        // geometry of the current render
+
+  function niceTop(max) {
+    const raw = max / 4;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const steps = [1, 2, 2.5, 5, 10];
+    for (let i = 0; i < steps.length; i++) {
+      if (max / (pow * steps[i]) <= 4.0001) {
+        const step = pow * steps[i];
+        return { step: step, top: Math.ceil(max / step) * step };
+      }
+    }
+  }
+  const tickLabel = function (v) { return v === 0 ? '$0' : '$' + (v / 1000) + 'K'; };
+
+  function render() {
+    const W = wrap.clientWidth;
+    if (!W) return;                         // hidden (table view)
+    const narrow = W < 560;
+    const H = narrow ? 320 : 360;           // includes the x-axis band
+    const m = { t: 14, r: narrow ? 20 : 144, b: 46, l: 50 };
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const n = months.length;
+    const sc = niceTop(Math.max.apply(null, names.map(function (nm) { return Math.max.apply(null, val[nm]); })));
+    const x = function (i) { return m.l + (n === 1 ? pw / 2 : i * pw / (n - 1)); };
+    const y = function (v) { return m.t + ph - v / sc.top * ph; };
+
+    svg.textContent = '';
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    // Grid and y-axis labels: hairlines, solid, recessive.
+    for (let v = 0; v <= sc.top + 1e-6; v += sc.step) {
+      el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v),
+                   stroke: v === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1,
+                   'shape-rendering': 'crispEdges' }, svg);
+      const t = el('text', { x: m.l - 10, y: y(v), dy: '.35em', 'text-anchor': 'end',
+                             'font-size': 13, fill: 'var(--ink-2)' }, svg);
+      t.textContent = tickLabel(v);
+    }
+
+    // X-axis labels: month, with the year under the first label and under each January.
+    const every = narrow ? 3 : 1;
+    let first = true;
+    for (let i = 0; i < n; i++) {
+      if ((n - 1 - i) % every !== 0) continue;
+      const lx = x(i), ly0 = m.t + ph + 20;
+      const t = el('text', { x: lx, y: ly0, 'text-anchor': 'middle', 'font-size': 13, fill: 'var(--ink-2)' }, svg);
+      t.textContent = shortLabel(i);
+      if (first || monthNo(i) === 1) {
+        const yr = el('text', { x: lx, y: ly0 + 16, 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--muted)' }, svg);
+        yr.textContent = yearOf(i);
+      }
+      first = false;
+    }
+
+    // Lines: 2px, round joins and caps.
+    names.forEach(function (nm, k) {
+      const d = val[nm].map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join('');
+      el('path', { d: d, fill: 'none', stroke: colour(k), 'stroke-width': 2,
+                   'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+    });
+
+    // End dots (r 4 = 8px, 2px surface ring) and direct labels, only if they do not collide.
+    const ends = names.map(function (nm, k) { return { nm: nm, k: k, yy: y(val[nm][n - 1]) }; });
+    const sorted = ends.slice().sort(function (a, b) { return a.yy - b.yy; });
+    let clear = !narrow;
+    for (let i = 1; i < sorted.length; i++) if (sorted[i].yy - sorted[i - 1].yy < 16) clear = false;
+    ends.forEach(function (e) {
+      el('circle', { cx: x(n - 1), cy: e.yy, r: 4, fill: colour(e.k), stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+      if (clear) {
+        const t = el('text', { x: x(n - 1) + 12, y: e.yy, dy: '.35em', 'font-size': 13, fill: 'var(--ink)' }, svg);
+        t.textContent = e.nm;
+      }
+    });
+
+    // Hover layer: a crosshair, one dot per series, and a hit area far bigger than any mark.
+    const cross = el('line', { y1: m.t, y2: m.t + ph, stroke: 'var(--axis)', 'stroke-width': 1,
+                               'shape-rendering': 'crispEdges', visibility: 'hidden' }, svg);
+    const dots = names.map(function (nm, k) {
+      return el('circle', { r: 5, fill: colour(k), stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' }, svg);
+    });
+    const hit = el('rect', { x: m.l - 12, y: m.t, width: pw + 24, height: ph + m.b - 8, fill: 'transparent' }, svg);
+    hit.style.touchAction = 'pan-y';
+
+    geo = { W: W, m: m, x: x, y: y, n: n, cross: cross, dots: dots, hit: hit };
+    hit.addEventListener('pointermove', function (ev) {
+      const box = svg.getBoundingClientRect();
+      const px = ev.clientX - box.left;
+      const i = Math.round((px - m.l) / (pw / (n - 1)));
+      show(Math.max(0, Math.min(n - 1, i)));
+    });
+    hit.addEventListener('pointerleave', hide);
+
+    if (cur >= 0) show(cur);
+  }
+
+  function show(i) {
+    if (!geo) return;
+    cur = i;
+    const g = geo, px = g.x(i);
+    g.cross.setAttribute('x1', px); g.cross.setAttribute('x2', px);
+    g.cross.setAttribute('visibility', 'visible');
+    g.dots.forEach(function (d, k) {
+      d.setAttribute('cx', px);
+      d.setAttribute('cy', g.y(val[names[k]][i]));
+      d.setAttribute('visibility', 'visible');
+    });
+
+    tip.textContent = '';
+    tip.append(h('div', 'tip-h', longLabel(i)));
+    const rowsEl = h('div', 'tip-rows');
+    names.forEach(function (nm, k) {
+      const key = h('span', 'key');
+      key.style.borderTopColor = colour(k);
+      const row = h('div', 'tip-row');
+      row.append(key, h('span', 'tip-v', fmt(val[nm][i])), h('span', 'tip-n', nm),
+                 h('span', 'tip-d', arrowPct(val[nm][i], ly[nm][i])));
+      rowsEl.appendChild(row);
+    });
+    rowsEl.appendChild(h('div', 'tip-sep'));
+    const trow = h('div', 'tip-row');
+    trow.append(h('span'), h('span', 'tip-v', fmt(total[i])), h('span', 'tip-n', 'All products'),
+                h('span', 'tip-d', arrowPct(total[i], totalLY[i])));
+    rowsEl.appendChild(trow);
+    tip.append(rowsEl, h('div', 'tip-foot', 'Arrow: change on the same month last year'));
+
+    tip.hidden = false;
+    const tw = tip.offsetWidth;
+    let left = px + 16;
+    // Stay inside the plot so the direct labels at the right edge stay readable.
+    if (left + tw > g.W - g.m.r + 4) left = px - tw - 16;
+    tip.style.left = Math.max(4, left) + 'px';
+    tip.style.top = (g.m.t + 6) + 'px';
+  }
+
+  function hide() {
+    cur = -1;
+    tip.hidden = true;
+    if (!geo) return;
+    geo.cross.setAttribute('visibility', 'hidden');
+    geo.dots.forEach(function (d) { d.setAttribute('visibility', 'hidden'); });
+  }
+
+  // Keyboard: same readout as hover.
+  svg.addEventListener('keydown', function (ev) {
+    const last = months.length - 1;
+    let i = cur < 0 ? last : cur;
+    if (ev.key === 'ArrowLeft') i = Math.max(0, i - 1);
+    else if (ev.key === 'ArrowRight') i = Math.min(last, i + 1);
+    else if (ev.key === 'Home') i = 0;
+    else if (ev.key === 'End') i = last;
+    else if (ev.key === 'Escape') { hide(); return; }
+    else return;
+    ev.preventDefault();
+    show(i);
+  });
+  svg.addEventListener('focus', function () { show(months.length - 1); });
+  svg.addEventListener('blur', hide);
+
+  // ---------- Table view (the accessible twin of the chart) ----------
+  (function buildTable() {
+    const t = h('table');
+    t.createCaption().textContent = 'Monthly revenue by product';
+    t.caption.style.cssText = 'position:absolute;left:-9999px';
+    const hr = t.createTHead().insertRow();
+    ['Month'].concat(names, ['All products', 'Same month last year']).forEach(function (c) {
+      hr.appendChild(h('th', '', c)).scope = 'col';
+    });
+    const tb = t.createTBody();
+    months.forEach(function (_, i) {
+      const r = tb.insertRow();
+      r.appendChild(h('th', '', longLabel(i))).scope = 'row';
+      r.firstChild.style.cssText = 'text-align:left;font-weight:400;color:inherit';
+      names.forEach(function (nm) { r.appendChild(h('td', '', fmt(val[nm][i]))); });
+      r.appendChild(h('td', '', fmt(total[i])));
+      r.appendChild(h('td', '', fmt(totalLY[i])));
+    });
+    const fr = t.createTFoot().insertRow();
+    fr.appendChild(h('td', '', 'All 12 months'));
+    names.forEach(function (nm) { fr.appendChild(h('td', '', fmt(sum(val[nm])))); });
+    fr.appendChild(h('td', '', fmt(sum(total))));
+    fr.appendChild(h('td', '', fmt(sum(totalLY))));
+    $('tablewrap').appendChild(t);
+  })();
+
+  const btn = $('viewBtn');
+  btn.addEventListener('click', function () {
+    const showTable = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', String(showTable));
+    btn.textContent = showTable ? 'View as chart' : 'View as table';
+    $('tablewrap').hidden = !showTable;
+    wrap.hidden = showTable;
+    $('legend').hidden = showTable;
+    if (showTable) hide(); else render();
+  });
+
+  render();
+  if (window.ResizeObserver) new ResizeObserver(render).observe(wrap);
+  else window.addEventListener('resize', render);
+})();
+</script>
+</body>
+</html>

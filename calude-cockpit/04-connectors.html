@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connectors for Claude</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --bad:#b3261e; --bad-soft:#fbe7e5;
+    --blue:#2a5db0; --blue-soft:#e4ecfa; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+      --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+    --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+  a{color:var(--accent)}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px;font-size:.9em;overflow-wrap:anywhere}
+  h2{font-size:clamp(24px,3.4vw,30px);line-height:1.2;margin:0 0 6px}
+  h3{font-size:18px;margin:0 0 6px;line-height:1.3}
+  p{margin:0 0 10px}
+  .lines span{display:block}
+  .muted{color:var(--muted)}
+
+  /* hero */
+  .hero{position:relative;border-radius:0 0 22px 22px;overflow:hidden;color:#fff;margin:0 -16px;min-height:340px;display:flex;align-items:flex-end}
+  .mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr)}
+  .mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.25) 0%,rgba(10,10,10,.82) 70%)}
+  .hero-text{position:relative;z-index:1;padding:40px 28px 30px;max-width:780px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#ffb59a}
+  .hero h1{font-size:clamp(30px,5.4vw,50px);line-height:1.08;margin:8px 0 12px}
+  .hero p{font-size:18px;color:#eee;margin:0}
+
+  /* section nav */
+  .snav{position:sticky;top:0;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;margin-bottom:8px}
+  .snav a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:14px;font-weight:600;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+  .snav a:hover{border-color:var(--accent)}
+  section{padding:40px 0 4px;scroll-margin-top:56px}
+  .intro{color:var(--muted);font-size:17px;margin-bottom:16px}
+  .intro code,.howto-steps li>span code{white-space:nowrap}
+
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .stack .box{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 24px;align-items:start}
+  .stack .box>h3{margin:2px 0 0}
+  .stack .box p:last-child{margin-bottom:0}
+  .small{font-size:14px}
+  p,li,.lines span,.what,.example,.flag{text-wrap:pretty}
+  .cmd{overflow-wrap:normal;word-break:normal;white-space:pre-wrap}
+
+  .tip{background:var(--ok-soft);border-color:transparent}
+  .warnbox{background:var(--warn-soft);border-color:transparent}
+  .badbox{background:var(--bad-soft);border-color:transparent}
+  ul.clean{margin:6px 0 0;padding-left:20px}
+  ul.clean li{margin:4px 0}
+
+  /* trust levels */
+  .level{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+  .lv-anthropic{background:var(--ok-soft);color:var(--ok)}
+  .lv-official{background:var(--blue-soft);color:var(--blue)}
+  .lv-community{background:var(--warn-soft);color:var(--warn)}
+
+  /* gallery */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 16px}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:99px;cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .controls input{flex:1 1 200px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+  .count{font-size:14px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+  .pic{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#c4552d,#7a3cc4)}
+  .pic.business{background:linear-gradient(135deg,#2a5db0,#2f7d4f)}
+  .pic.productivity{background:linear-gradient(135deg,#9a6a00,#c4552d)}
+  .pic.gaming{background:linear-gradient(135deg,#5b2bb0,#0f8a9e)}
+  .rating{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+  .lv-top{background:var(--accent);color:#fff}
+  .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  .cat{position:absolute;top:10px;left:10px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.62);color:#fff;backdrop-filter:blur(4px)}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:17px;font-weight:700;color:var(--accent);margin:0}
+  .by{font-size:13px;color:var(--muted);margin:-4px 0 2px}
+  .what{margin:0}
+  .flag{font-size:13px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:8px;padding:4px 9px}
+  .get{font-size:13px;margin-top:2px;padding-top:6px;border-top:1px solid var(--line)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .card{position:relative}
+  .example{font-size:14px;line-height:1.45;background:var(--code);border-radius:8px;padding:8px 10px}
+  .example b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  /* Instructions: closed by default. They drop down while the mouse is on the panel (or after a tap). */
+  .guide{border:1px dashed var(--line);border-radius:10px;transition:border-color .15s}
+  .guide-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+  .guide-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:9px}
+  .guide-toggle .chev{margin-left:auto;flex:none;transition:transform .2s}
+  .tap-label{display:none}
+  @media (hover:none){ .hover-label{display:none} .tap-label{display:inline} }
+  .guide-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+  .guide-inner{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s linear .22s}
+  .guide.open{border-color:var(--accent);border-style:solid}
+  .guide.open .guide-body{grid-template-rows:1fr}
+  .guide.open .guide-inner{visibility:visible;transition-delay:0s}
+  .guide.open .chev{transform:rotate(180deg)}
+  @media (hover:hover){
+    .guide:hover{border-color:var(--accent);border-style:solid}
+    .guide:hover .guide-body{grid-template-rows:1fr;transition-delay:.12s}
+    .guide:hover .guide-inner{visibility:visible;transition-delay:.12s}
+    .guide:hover .chev{transform:rotate(180deg)}
+  }
+  ol.howto-steps{margin:0 10px;padding:10px 2px 12px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45}
+  ol.howto-steps li::marker{font-weight:700;color:var(--accent)}
+  ol.howto-steps li>b{display:block;margin-bottom:3px}
+  ol.howto-steps li>span{display:block;text-wrap:pretty}
+  .small-hint{font-size:12px;color:var(--muted);margin-top:5px}
+  .cmdrow.prompt code{font-family:inherit;font-size:13px}
+  .cmdrow{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 8px;margin-top:4px}
+  .cmdrow code{flex:1;min-width:0;background:none;padding:0;font-size:12px;line-height:1.45;overflow-wrap:break-word;word-break:normal}
+  .stepno{flex:none;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;display:grid;place-items:center}
+  .cp{flex:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .cp:hover{border-color:var(--accent);color:var(--accent)}
+  .cp.ok{color:var(--ok);border-color:var(--ok)}
+  .cp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .install-what{font-size:13px;margin-top:8px;line-height:1.4}
+  .install-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  /* steps */
+  ol.steps{margin:6px 0 0;padding-left:22px}
+  ol.steps li{margin:6px 0}
+  .cmd{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px;overflow-wrap:anywhere}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 4px}
+  .quote{border-left:3px solid var(--bad);padding:4px 0 4px 12px;margin:10px 0;font-style:italic}
+  .quote cite{display:block;font-size:13px;font-style:normal;color:var(--muted)}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+  footer{margin-top:50px;color:var(--muted);font-size:14px}
+  button:focus-visible,.snav a:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:640px){
+    .stack .box{grid-template-columns:1fr}
+    .g4{grid-template-columns:1fr}
+    .cmd{overflow-wrap:anywhere}
+    .mosaic{grid-template-columns:repeat(3,1fr)}
+    .hero-text{padding:28px 18px 22px}
+  }
+  @media print{ .guide-toggle{display:none} .guide-body{grid-template-rows:1fr} .guide-inner{visibility:visible} .snav,.controls{display:none} .hero{color:#000;min-height:0}.hero::after,.mosaic{display:none} .hero p{color:#333} .eyebrow{color:var(--accent)} .card{break-inside:avoid} }
+
+  /* pages 03 and 04 */
+  .name{font-family:inherit;font-size:19px}
+  .lv-free{background:var(--ok-soft);color:var(--ok)}
+  .pic.everyday{background:linear-gradient(135deg,#0f8a9e,#2f7d4f)}
+  .tools .box h3{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;color:var(--accent);margin-bottom:4px}
+  .tools .box p{margin:0;font-size:15px}
+  .grid.tools{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="mosaic" id="mosaic" aria-hidden="true"></div>
+  <div class="hero-text">
+    <div class="eyebrow">Lesson one &middot; Topic 4</div>
+    <h1>Connectors: plug Claude into your apps</h1>
+    <p class="lines">
+      <span>Gmail, Drive, Notion, Canva, Blender and hundreds more.</span>
+      <span>Connect once on claude.ai, then use them in Claude Code too.</span>
+    </p>
+  </div>
+</header>
+
+<nav class="snav" aria-label="Sections">
+  <a href="#what">What is a connector</a>
+  <a href="#how">How it works</a>
+  <a href="#find">Where to find</a>
+  <a href="#gallery">32 connectors</a>
+  <a href="#connect">Connect</a>
+  <a href="#use">Use</a>
+  <a href="#disconnect">Disconnect</a>
+  <a href="#safe">Stay safe</a>
+  <a href="#try">Try it</a>
+</nav>
+
+<!-- WHAT -->
+<section id="what">
+  <h2>What is a connector?</h2>
+  <div class="grid g3">
+    <div class="box">
+      <h3>A connector</h3>
+      <p class="lines">
+        <span>A secure link between Claude and an app you use.</span>
+        <span>You sign in, and Claude can read or act there.</span>
+        <span>It works in chat, the desktop app and Claude Code.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Under the hood</h3>
+      <p class="lines">
+        <span>An MCP server, usually run by the app's own company.</span>
+        <span>It's the same technology as the tools on page 3.</span>
+        <span>The difference: it opens your account, not just the web.</span>
+      </p>
+    </div>
+    <div class="box tip">
+      <h3>Think of it like this</h3>
+      <p class="lines">
+        <span>A skill is know-how.</span>
+        <span>A tool is a pair of hands.</span>
+        <span>A connector is a key to one of your accounts.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section id="how">
+  <h2>How connectors reach Claude Code</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Connect on claude.ai</h3>
+      <p class="lines">
+        <span>On claude.ai, open <b>Customize &rsaquo; Connectors</b>.</span>
+        <span>Find the app, click Connect, and sign in to it.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>It appears in Claude Code</h3>
+      <p class="lines">
+        <span>Claude Code brings in your connectors from claude.ai.</span>
+        <span>Type <code>/mcp</code> to see them, named like "claude.ai Gmail".</span>
+        <span>This works when Claude Code is logged in with your Claude account.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Team and Enterprise plans</h3>
+      <p class="lines">
+        <span>Only admins can add connectors for the company.</span>
+        <span>Ask your admin if the app you need is missing.</span>
+      </p>
+    </div>
+    <div class="box warnbox">
+      <h3>Google and Microsoft</h3>
+      <p class="lines">
+        <span>Connect Gmail, Google Calendar, Drive and Microsoft 365 on claude.ai.</span>
+        <span>Claude Code can't sign in to them by itself.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FIND -->
+<section id="find">
+  <h2>Where to find connectors</h2>
+  <p class="intro">Every card on this page comes from Anthropic's connectors directory.</p>
+  <div class="grid g4">
+    <div class="box">
+      <span class="level lv-anthropic">Start here</span>
+      <h3>The Connectors page on claude.ai</h3>
+      <p class="lines">
+        <span>Open <b>Customize &rsaquo; Connectors</b>, then browse or search.</span>
+        <span>Page: <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener">claude.ai/customize/connectors</a></span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-anthropic">Reviewed by Anthropic</span>
+      <h3>The connectors directory</h3>
+      <p class="lines">
+        <span>Every connector has a page with its maker and abilities.</span>
+        <span>Page: <a href="https://claude.com/connectors" target="_blank" rel="noopener">claude.com/connectors</a></span>
+        <span>Look for the <b>Anthropic verified</b> label.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-official">Ask first</span>
+      <h3>Your company's admin</h3>
+      <p class="lines">
+        <span>On Team and Enterprise plans, admins choose the connectors.</span>
+        <span>Ask them to add the apps your team uses.</span>
+      </p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">Check before connecting</span>
+      <h3>Custom connectors</h3>
+      <p class="lines">
+        <span>You can add a connector by its web address.</span>
+        <span>Use only addresses from the app's official website.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <h2>32 connectors worth knowing</h2>
+  <p class="intro">Some are wow and creative. Some run your business day.</p>
+  <p class="intro lines" style="margin-top:-10px"><span>Examples use the practice files in the <code>04-connector-files</code> folder.</span><span>Most examples also use your own account in that app.</span><span>Under each example there is a small instructions panel.</span><span>Hover over it to see how to connect and try it.</span><span>On a phone or tablet, tap the panel instead.</span></p>
+  <div class="controls">
+    <div id="filters" role="group" aria-label="Filter by type"></div>
+    <button class="chip" type="button" id="onlyBtn" aria-pressed="false"></button>
+    <input id="q" type="search" placeholder="Search, e.g. email, video, CRM" aria-label="Search">
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="muted lines" style="margin-top:14px;font-size:14px"><span>The badge on each card shows where it comes from. Red notes are things to know first.</span><span>Each copy button copies one line. Run numbered lines in order.</span></p>
+</section>
+
+<!-- CONNECT -->
+<section id="connect">
+  <h2>How to connect an app</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>1. On claude.ai</h3>
+      <div>
+        <ol class="steps">
+          <li>Go to <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener">claude.ai/customize/connectors</a>.</li>
+          <li>Search for the app, for example Notion.</li>
+          <li>Click <b>Connect</b> and sign in to the app.</li>
+          <li>Read what Claude will be allowed to do, then approve.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="box">
+      <h3>2. Check in Claude Code</h3>
+      <p class="lines">
+        <span>Start a new chat in VS Code and type <code>/mcp</code>.</span>
+        <span>Look for "claude.ai" and the app's name.</span>
+        <span>Missing? Type <code>/status</code> and check you're logged in with your Claude account.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>3. Only in Claude Code</h3>
+      <p class="lines">
+        <span>Type <code>/mcp</code> and add a server.</span>
+        <span>Paste the address from the connector's card or directory page.</span>
+        <span>Then choose it in <code>/mcp</code> and sign in. Not for Google or Microsoft.</span>
+      </p>
+    </div>
+    <div class="box tip">
+      <h3>Did it work?</h3>
+      <p class="lines"><span>Ask Claude: "Which connectors can you use right now?"</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- USE -->
+<section id="use">
+  <h2>How to use a connector</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Name the app</h3>
+      <div>
+        <p class="lines"><span>Claude knows which connector to use when you name the app.</span></p>
+        <span class="cmd">Use Notion to create a page with the action items from meeting-notes.txt.</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Start with reading</h3>
+      <p class="lines">
+        <span>Ask questions first: search, list, summarize.</span>
+        <span>Move to actions later: send, post, create, pay.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Claude asks before acting</h3>
+      <p class="lines">
+        <span>Before a connector changes something, Claude asks you.</span>
+        <span>Read the request, then allow it or say no.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- DISCONNECT -->
+<section id="disconnect">
+  <h2>How to disconnect</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>Disconnect on claude.ai</h3>
+      <p class="lines">
+        <span>Open <b>Customize &rsaquo; Connectors</b>, choose the app, and disconnect it.</span>
+        <span>It disappears from Claude Code too.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Turn it off in one project</h3>
+      <p class="lines">
+        <span>Type <code>/mcp</code>, choose the connector, and disable it.</span>
+        <span>It stays connected everywhere else.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Remove access in the app</h3>
+      <p class="lines">
+        <span>Most apps list connected services in their security settings.</span>
+        <span>You can remove Claude's access from there too.</span>
+      </p>
+    </div>
+    <div class="box warnbox">
+      <h3>Good habit</h3>
+      <p class="lines"><span>Disconnect apps you don't use. Fewer keys means less risk.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- SAFE -->
+<section id="safe">
+  <h2>Stay safe: a connector acts as you</h2>
+  <p class="intro">Claude sees what you can see in that app, and can do what you can do.</p>
+  <div class="quote">"Verify you trust each server before connecting it. Servers that fetch external content can expose you to prompt injection risk."<cite>Claude Code documentation, MCP</cite></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="box badbox">
+      <h3>Watch out for</h3>
+      <ul class="clean">
+        <li>Emails and documents with hidden instructions for AI.</li>
+        <li>Connecting an account with more access than the job needs.</li>
+        <li>Letting Claude send, post or pay without checking first.</li>
+        <li>Company data in apps your company did not approve.</li>
+      </ul>
+    </div>
+    <div class="box tip">
+      <h3>5 good habits</h3>
+      <ol class="steps">
+        <li><b>Connect only what you need</b> for today's job.</li>
+        <li><b>Read first, act later.</b> Start with questions.</li>
+        <li><b>Check every send, post and payment</b> before you allow it.</li>
+        <li><b>Use test modes,</b> like Stripe's test mode.</li>
+        <li><b>Disconnect</b> what you don't use.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="stack" style="margin-top:14px">
+    <div class="box">
+      <h3>Work accounts</h3>
+      <p class="lines"><span>Ask before connecting work email or files.</span><span>Some data must stay in approved systems.</span></p>
+    </div>
+    <div class="box">
+      <h3>Costs</h3>
+      <p class="lines"><span>Some apps charge for actions, like lead searches or videos.</span><span>Check the app's pricing before big requests.</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- TRY -->
+<section id="try">
+  <h2>Try it yourself: connect, use, disconnect</h2>
+  <p class="intro">About 15 minutes. Use the <code>04-connector-files</code> folder and your Google account.</p>
+  <div class="box">
+    <ol class="steps">
+      <li>Go to <a href="https://claude.ai/customize/connectors" target="_blank" rel="noopener">claude.ai/customize/connectors</a>.</li>
+      <li>Connect <b>Google Calendar</b> and sign in with your Google account.</li>
+      <li>Open <code>04-connector-files</code> in VS Code and start a new chat.</li>
+      <li>Type <code>/mcp</code>. Do you see Google Calendar from claude.ai?</li>
+      <li>Ask:
+        <span class="cmd">Check my Google Calendar for next week. Suggest two free 30-minute slots for the follow-up meeting in meeting-notes.txt.</span>
+      </li>
+      <li>Ask:
+        <span class="cmd">Which of my meetings next week could be shorter? Don't change anything.</span>
+      </li>
+      <li>Disconnect Google Calendar on the same claude.ai page.</li>
+      <li>Start a new chat and type <code>/mcp</code> again. Is it gone?</li>
+    </ol>
+    <details><summary>Check yourself</summary>
+      <div class="lines" style="margin-top:6px">
+        <span>In step 5 you get two real free times from your calendar.</span>
+        <span>The follow-up meeting is on Monday, 9 November in meeting-notes.txt.</span>
+        <span>In step 6 nothing changes in your calendar. Claude only suggests.</span>
+        <span>After step 7, Google Calendar is gone from <code>/mcp</code>.</span>
+      </div>
+    </details>
+  </div>
+  <div class="box tip" style="margin-top:14px">
+    <h3>Summary</h3>
+    <p class="lines">
+      <span>Connectors are keys to your apps: email, files, CRM, design and more.</span>
+      <span>Connect on claude.ai, check with /mcp, and disconnect what you don't use.</span>
+      <span>Start with reading, and check every action before you allow it.</span>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p class="lines">
+    <span>Sources: Claude Code documentation (MCP, VS Code) and <a href="https://claude.com/connectors" target="_blank" rel="noopener">claude.com/connectors</a>.</span>
+    <span>Connectors change often. Check them again before each class.</span>
+    <span>Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</span>
+  </p>
+</footer>
+</div>
+
+<script>
+/* Each card is generated from ITEMS. Edit the data here, not the rendered HTML.
+   All connectors here are listed in Anthropic's directory (claude.com/connectors). alt = the address for adding it only in Claude Code.
+   install/remove: lines with copy buttons. lead/hint/gets: text around them. files: practice files the example uses. */
+const IMG = id => "https://images.unsplash.com/photo-" + id + "?w=640&h=400&q=70&auto=format&fit=crop";
+const FOLDER = "04-connector-files";
+const ITEMS = [
+{"name": "Blender", "by": "Blender Lab", "src": "verified", "cat": "wow", "img": "1626544827763-d516dce335e2", "what": "Lets Claude build and change 3D scenes inside Blender, the free 3D app.", "prompt": "Use Blender to build a simple 3D scene: a desk, an office chair and a lamp, with soft light.", "see": "The objects appear in your open Blender scene, one by one.", "files": [], "step2": "Connect it", "install": ["https://lab.blender.org/mcp-server/"], "lead": "In the Claude desktop app, open Customize &rsaquo; Connectors and add Blender. Then install the Blender add-on from this page.", "hint": "In Blender: Edit &rsaquo; Preferences &rsaquo; Add-ons. Find MCP and start the server.", "removeTitle": "Disconnect it when you're done", "removeLead": "Remove it in Customize &rsaquo; Connectors, and turn off the add-on in Blender.", "remove": [], "url": "https://claude.com/marketplace/connectors/blender", "urlLabel": "See it in the directory", "flag": "Needs the free Blender app and the Claude desktop app.", "step1": ["Open Blender", "Start Blender and keep the default scene open."], "askTitle": "In the Claude desktop app, ask"},
+{"name": "Canva", "by": "Canva", "src": "verified", "cat": "wow", "img": "1561070791-2526d30994b5", "what": "Creates, edits and resizes Canva designs from a short request.", "prompt": "Use Canva to create an Instagram post for our chair sale. Use the text in sale-announcement.txt.", "see": "A new design in your Canva account, with a link to open and edit it.", "files": ["sale-announcement.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Canva and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Canva and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/canva", "urlLabel": "See it in the directory", "alt": ["https://mcp.canva.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Picsart Media Studio", "by": "PicsArt, Inc.", "src": "verified", "cat": "wow", "img": "1574717024653-61fd2cf4d44d", "what": "Turns ideas, photos and clips into finished short videos.", "prompt": "Use Picsart to make a 15-second promo video for an office-chair sale, with bold text and upbeat music.", "see": "A short video. Claude gives you a link to watch and download it.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Picsart Media Studio and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Picsart Media Studio and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/picsart-media-studio", "urlLabel": "See it in the directory", "alt": ["https://api.picsart.com/connectors/media-tools/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Adobe", "by": "Adobe Inc.", "src": "verified", "cat": "wow", "img": "1542038784456-1ea8e935640e", "what": "Designs and edits images with Adobe's professional tools.", "prompt": "Use Adobe to create a web banner for our November chair sale: 20% off, in green and white.", "see": "A banner design, with a link to open and edit it in Adobe.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Adobe and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Adobe and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/adobe-creativity", "urlLabel": "See it in the directory", "alt": ["https://adobe-creativity.adobe.io/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "tldraw", "by": "tldraw", "src": "verified", "cat": "wow", "img": "1484480974693-6ca0a78fb36b", "what": "Sketches diagrams and drawings with you on a shared canvas.", "prompt": "Use tldraw to draw a simple diagram of how an order travels from our website to the customer's desk.", "see": "A hand-drawn style diagram you can move and edit.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for tldraw and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open tldraw and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/tldraw", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://tldraw-mcp-app.tldraw.workers.dev/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Shows best in the Claude app, where the drawing appears in the chat."},
+{"name": "Gamma", "by": "Gamma", "src": "verified", "cat": "wow", "img": "1540317580384-e5d43616b9aa", "what": "Creates presentations, documents and simple websites with AI.", "prompt": "Use Gamma to turn meeting-notes.txt into a 6-slide presentation for the team.", "see": "A link to a finished presentation in Gamma, with a design and images.", "files": ["meeting-notes.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Gamma and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Gamma and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/gamma", "urlLabel": "See it in the directory", "alt": ["https://mcp.gamma.app/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Descript", "by": "Descript", "src": "verified", "cat": "wow", "img": "1478737270239-2f02b77fc618", "what": "Creates and edits videos and podcasts from a short request.", "prompt": "Use Descript to create a 30-second video announcing our chair sale, with captions. Use sale-announcement.txt for the script.", "see": "A new video project in Descript, with a script, captions and visuals.", "files": ["sale-announcement.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Descript and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Descript and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/descript", "urlLabel": "See it in the directory", "alt": ["https://api.descript.com/v2/mcp/claude"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Stewdio", "by": "Cekura, Inc.", "src": "verified", "cat": "wow", "img": "1550684848-fac1c5b4e853", "what": "Makes motion graphics and animations from a description.", "prompt": "Use Stewdio to make a 5-second animated title that says 'November chair sale: 20% off', in green and white.", "see": "A short animation you can preview and download.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Stewdio and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Stewdio and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/stewdio", "urlLabel": "See it in the directory", "alt": ["https://mcp.stewdio.ai/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Gmail", "by": "Google", "src": "verified", "cat": "business", "img": "1563986768609-322da13575f3", "what": "Searches your inbox, summarizes threads and drafts replies.", "prompt": "Search my Gmail for emails from the last 7 days that still need a reply. List the 5 most urgent, then draft a reply to the first one. Don't send it.", "see": "A list of 5 emails, and a new draft in your Drafts folder. Nothing is sent.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Gmail and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once. It can only be connected on claude.ai.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Gmail and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/gmail", "urlLabel": "See it in the directory"},
+{"name": "Google Drive", "by": "Google", "src": "verified", "cat": "business", "img": "1544197150-b99a580bb7a8", "what": "Searches, reads and uploads files in your Google Drive.", "prompt": "Summarize sales.csv in one page and upload it to my Google Drive as 'Greenleaf sales summary'.", "see": "A new file in your Google Drive, with the summary inside.", "files": ["sales.csv"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Google Drive and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once. It can only be connected on claude.ai.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Google Drive and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/google-drive", "urlLabel": "See it in the directory"},
+{"name": "Microsoft 365", "by": "Anthropic", "src": "verified", "cat": "business", "img": "1497215728101-856f4ea42174", "what": "Reads your Outlook email and calendar, OneDrive, SharePoint and Teams.", "prompt": "Search my Outlook email from this month for messages about late deliveries, and summarize them.", "see": "A short summary of the matching emails, with who sent them and when.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Microsoft 365 and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once. It can only be connected on claude.ai.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Microsoft 365 and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/microsoft-365", "urlLabel": "See it in the directory", "flag": "Needs a work or school Microsoft account. Your IT admin may need to allow it."},
+{"name": "HubSpot", "by": "HubSpot", "src": "verified", "cat": "business", "img": "1556761175-5973dc0f32e7", "what": "Reads and updates your HubSpot CRM: contacts, companies and deals.", "prompt": "Show my open HubSpot deals with no activity in the last 30 days, as a table.", "see": "A table of quiet deals, with the company, stage and value of each.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for HubSpot and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open HubSpot and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/hubspot", "urlLabel": "See it in the directory", "alt": ["https://mcp.hubspot.com/anthropic"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Needs a HubSpot account. The free CRM works."},
+{"name": "Stripe", "by": "Stripe", "src": "verified", "cat": "business", "img": "1556742049-0cfed4f6a45d", "what": "Works with your Stripe payments: customers, products, invoices and payment links.", "prompt": "Using Stripe in test mode, create a payment link for the office chair in products.csv.", "see": "A Stripe payment link. In test mode, no real money moves.", "files": ["products.csv"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Stripe and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Stripe and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/stripe", "urlLabel": "See it in the directory", "alt": ["https://mcp.stripe.com/"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Use Stripe's test mode first. Real payments move real money."},
+{"name": "QuickBooks", "by": "Intuit QuickBooks", "src": "verified", "cat": "business", "img": "1543286386-713bdd548da4", "what": "Helps with bookkeeping: categorize transactions, reconcile accounts, send invoices.", "prompt": "List my uncategorized bank transactions in QuickBooks and suggest a category for each. Don't change anything yet.", "see": "A table of transactions, with a suggested category for each one.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for QuickBooks and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open QuickBooks and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/intuit-quickbooks-labs", "urlLabel": "See it in the directory", "alt": ["https://mcp-nttf.quickbooks.intuit.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Beta. Needs a QuickBooks Online account."},
+{"name": "Shopify", "by": "Shopify", "src": "verified", "cat": "business", "img": "1472851294608-062f824d29cc", "what": "Helps you build, manage and analyze a Shopify online store.", "prompt": "Use Shopify to help me start an online store for Greenleaf with the 3 products in products.csv.", "see": "Claude walks you through setting up the store and adding the 3 products.", "files": ["products.csv"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Shopify and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Shopify and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/shopify", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://setup.shopify.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Opening a real store needs a Shopify account."},
+{"name": "Docusign", "by": "Docusign", "src": "verified", "cat": "business", "img": "1450101499163-c8848c66ca85", "what": "Finds, reads and tracks your contracts and signing requests.", "prompt": "Use Docusign to list my agreements that end in the next 90 days.", "see": "A list of contracts, with the date each one ends.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Docusign and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Docusign and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/docusign", "urlLabel": "See it in the directory", "alt": ["https://mcp.docusign.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Needs a Docusign account."},
+{"name": "Jotform", "by": "Jotform", "src": "verified", "cat": "business", "img": "1586281380349-632531db7ed4", "what": "Creates forms and surveys, and analyzes the answers.", "prompt": "Use Jotform to create a 5-question customer survey about the problems in customer-feedback.txt.", "see": "A new survey in your Jotform account, with a link to share.", "files": ["customer-feedback.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Jotform and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Jotform and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/jotform", "urlLabel": "See it in the directory", "alt": ["https://mcp.jotform.com/mcp-app"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Apollo.io", "by": "Apollo.io", "src": "verified", "cat": "business", "img": "1600880292203-757bb62b4baf", "what": "Finds sales leads and contact details, and manages outreach.", "prompt": "Use Apollo to find 10 office managers at companies in Tel Aviv with 50 to 200 employees.", "see": "A table of 10 people, with their company, job title and company size.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Apollo.io and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Apollo.io and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/apollo", "urlLabel": "See it in the directory", "alt": ["https://mcp.apollo.io/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Needs an Apollo account. Searches may use credits."},
+{"name": "LegalZoom", "by": "LegalZoom", "src": "verified", "cat": "business", "img": "1589829545856-d10d557cf95f", "what": "Gives legal guidance and tools, and connects you with attorneys.", "prompt": "Use LegalZoom to review nda-draft.txt. Which clauses should I ask a lawyer about?", "see": "A list of risky clauses in plain words, and options for getting help from an attorney.", "files": ["nda-draft.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for LegalZoom and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open LegalZoom and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/legalzoom", "urlLabel": "See it in the directory", "alt": ["https://www.legalzoom.com/mcp/claude/v1"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "General guidance only. It is not advice from your own lawyer."},
+{"name": "Fiverr", "by": "Fiverr", "src": "verified", "cat": "business", "img": "1522202176988-66273c2fd55f", "what": "Finds freelancers for almost any job, with prices and reviews.", "prompt": "Use Fiverr to find 3 freelancers who can design a logo for an office-supplies company, for under $100.", "see": "3 freelancer offers with prices, ratings and links. Nothing is ordered.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Fiverr and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Fiverr and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/fiverr-mcp", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://mcp.fiverr.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Google Calendar", "by": "Google", "src": "verified", "cat": "productivity", "img": "1506784983877-45594efa4cbe", "what": "Checks your schedule, finds free time and plans meetings.", "prompt": "Check my Google Calendar for next week. Suggest two free 30-minute slots for the follow-up meeting in meeting-notes.txt.", "see": "Two suggested times that fit your calendar. Nothing is booked yet.", "files": ["meeting-notes.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Google Calendar and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once. It can only be connected on claude.ai.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Google Calendar and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/google-calendar", "urlLabel": "See it in the directory"},
+{"name": "Notion", "by": "Notion", "src": "verified", "cat": "productivity", "img": "1517842645767-c639042777db", "what": "Searches, creates and updates pages and databases in Notion.", "prompt": "Create a Notion page called 'Action items, 2 November' with the action items from meeting-notes.txt as a checklist.", "see": "A new page in your Notion workspace, with 4 checkboxes.", "files": ["meeting-notes.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Notion and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Notion and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/notion", "urlLabel": "See it in the directory", "alt": ["https://mcp.notion.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Slack", "by": "Slack", "src": "verified", "cat": "productivity", "img": "1577563908411-5077b6dc7624", "what": "Searches messages, reads channels and creates canvases in Slack.", "prompt": "Create a Slack canvas called 'Delivery problems' that summarizes customer-feedback.txt.", "see": "A new canvas in your Slack workspace, with the summary.", "files": ["customer-feedback.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Slack and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Slack and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/slack", "urlLabel": "See it in the directory", "alt": ["https://mcp.slack.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Your Slack admin may need to approve it."},
+{"name": "Zapier", "by": "Zapier", "src": "verified", "cat": "productivity", "img": "1518432031352-d6fc5c10da5a", "what": "Connects Claude to thousands of apps through Zapier actions.", "prompt": "Use Zapier to add each complaint in customer-feedback.txt as a row in a new Google Sheet.", "see": "A Google Sheet with one row per complaint.", "files": ["customer-feedback.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Zapier and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Zapier and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/zapier", "urlLabel": "See it in the directory", "alt": ["https://mcp.zapier.com/api/v1/connect"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "You choose which actions Claude may use, in your Zapier account."},
+{"name": "monday.com", "by": "monday.com", "src": "verified", "cat": "productivity", "img": "1611224923853-80b023f02d71", "what": "Creates and updates boards, tasks and CRM items in monday.com.", "prompt": "Create a monday.com board called 'Delivery fixes' with the action items from meeting-notes.txt, with owners and due dates.", "see": "A new board with 4 tasks, each with an owner and a date.", "files": ["meeting-notes.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for monday.com and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open monday.com and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/monday", "urlLabel": "See it in the directory", "alt": ["https://mcp.monday.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Todoist", "by": "Doist", "src": "verified", "cat": "productivity", "img": "1598791318878-10e76d178023", "what": "Adds, finds and completes tasks in your Todoist.", "prompt": "Add the 4 action items from meeting-notes.txt to my Todoist inbox, with their due dates.", "see": "4 new tasks in your Todoist inbox, each with a date.", "files": ["meeting-notes.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Todoist and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Todoist and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/todoist", "urlLabel": "See it in the directory", "alt": ["https://ai.todoist.net/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Granola", "by": "Granola", "src": "verified", "cat": "productivity", "img": "1557804506-669a67965ba0", "what": "Answers questions about your Granola meeting notes and transcripts.", "prompt": "Use Granola to list the decisions from my meetings this week.", "see": "A list of decisions, with the meeting each one came from.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Granola and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Granola and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/granola", "urlLabel": "See it in the directory", "alt": ["https://mcp.granola.ai/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:", "flag": "Needs Granola, the meeting notes app."},
+{"name": "Miro", "by": "Miro", "src": "verified", "cat": "productivity", "img": "1531403009284-440f080d1e12", "what": "Creates diagrams, mind maps and sticky notes on Miro boards.", "prompt": "Create a Miro mind map of the complaints in customer-feedback.txt, grouped by type.", "see": "A new board with a mind map: late deliveries, wrong items, slow service and praise.", "files": ["customer-feedback.txt"], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Miro and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. You sign in to the app once.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Miro and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/miro", "urlLabel": "See it in the directory", "alt": ["https://mcp.miro.com/"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Expedia", "by": "Expedia Group", "src": "verified", "cat": "everyday", "img": "1436491865332-7a61a109cc05", "what": "Plans trips: flights, hotels and prices.", "prompt": "Use Expedia to find 3 hotels in Berlin for a 2-night team trip in March, under $200 a night.", "see": "3 hotel options with prices and links. Nothing is booked.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Expedia and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Expedia and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/expedia", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://www.expedia.com/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Yelp", "by": "Yelp Inc.", "src": "verified", "cat": "everyday", "img": "1555396273-367ea4eb4db5", "what": "Finds restaurants and local services, with ratings and reviews.", "prompt": "Use Yelp to find 5 restaurants in Manhattan that can host a client dinner for 8 people.", "see": "5 restaurants with ratings, price level and links.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Yelp and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Yelp and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/yelp", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://mcp-anthropic.yelp.com/claude/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Uber", "by": "Uber", "src": "verified", "cat": "everyday", "img": "1449965408869-eaa3f722e40d", "what": "Gives price and time estimates for Uber rides.", "prompt": "How much is an Uber from JFK Airport to Times Square right now? Compare the ride options.", "see": "Price and time estimates for each ride type. Nothing is booked.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Uber and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Uber and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/uber", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://mcp.uber.com/claude/rides-3p/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"},
+{"name": "Spotify", "by": "Spotify", "src": "verified", "cat": "everyday", "img": "1470225620780-dba8ba36b745", "what": "Recommends music and podcasts for you.", "prompt": "Use Spotify to recommend 5 podcasts about running a small business.", "see": "5 podcasts, each with a short description and a link.", "files": [], "step2": "Connect it", "install": ["https://claude.ai/customize/connectors"], "lead": "On claude.ai, open Customize &rsaquo; Connectors. Search for Spotify and click Connect.", "hint": "It then shows up in Claude Code too. Type <b>/mcp</b> to check. No sign-in needed.", "removeTitle": "Disconnect it when you're done", "removeLead": "On the same page, open Spotify and click Disconnect.", "remove": ["https://claude.ai/customize/connectors"], "url": "https://claude.com/marketplace/connectors/spotify", "urlLabel": "See it in the directory", "nosignin": true, "alt": ["https://mcp-gateway-external-pilot.spotify.net/mcp"], "altLead": "Using Claude Code without claude.ai? Type <b>/mcp</b>, add a server, and paste this address:"}
+];
+
+const CATS = {"all": "All", "wow": "Wow & creative", "business": "Business", "productivity": "Productivity", "everyday": "Everyday life"};
+const CAT_LABEL = {"wow": "Wow & creative", "business": "Business", "productivity": "Productivity", "everyday": "Everyday life"};
+const SRC = {"verified": ["lv-official", "Anthropic verified"]};
+const ONLY = {label:"No sign-in needed", test: s => !!s.nosignin};
+const NOUN = "connectors";
+const state = {cat:"all", q:"", only:false};
+
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+const DONE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+/* Display only: keep words whole (non-breaking hyphens) and allow line breaks after "@" and "word/".
+   The copy button copies the original text from data-copy. */
+const pretty = t => esc(t).replace(/-/g, "‑").replace(/@/g, "@<wbr>").replace(/(\w)\//g, "$1/<wbr>");
+
+function cmdRow(text, n, cls){
+  return `<div class="cmdrow${cls ? " " + cls : ""}">${n ? `<span class="stepno">${n}</span>` : ""}<code data-copy="${esc(text)}">${cls ? esc(text) : pretty(text)}</code><button class="cp" type="button" title="Copy" aria-label="Copy">${COPY_ICON}</button></div>`;
+}
+const cmdRows = list => list.map((c, i) => cmdRow(c, list.length > 1 ? i + 1 : 0)).join("");
+const small = t => t ? `<span class="small-hint">${t}</span>` : "";
+
+/* The 5 steps that drop down under the example. */
+function steps(s){
+  const files = s.files.length ? "It uses: " + s.files.map(f => `<code>${f}</code>`).join(" ") : "No files needed for this one.";
+  const first = s.step1 ? `<li><b>${s.step1[0]}</b><span>${s.step1[1]}</span></li>`
+                        : `<li><b>Open the practice folder</b><span>Open <code>${FOLDER}</code> in VS Code. ${files}</span></li>`;
+  const alt = s.alt ? small(s.altLead) + cmdRows(s.alt) : "";
+  return `<ol class="howto-steps">
+      ${first}
+      <li><b>${s.step2 || "Install it"}</b>${s.lead ? `<span>${s.lead}</span>` : ""}${cmdRows(s.install)}${small(s.gets)}${small(s.hint)}${alt}</li>
+      <li><b>${s.askTitle || "Start a new chat and ask"}</b>${cmdRow(s.prompt, 0, "prompt")}</li>
+      <li><b>What you'll see</b><span>${s.see}</span></li>
+      <li><b>${s.removeTitle || "Remove it when you're done"}</b>${s.removeLead ? `<span>${s.removeLead}</span>` : ""}${cmdRows(s.remove)}</li>
+    </ol>`;
+}
+
+const gid = s => "guide-" + s.name.toLowerCase().replace(/[^\w-]/g, "-");
+
+function card(s){
+  const [cls, label] = SRC[s.src];
+  return `<article class="card">
+    <div class="pic ${s.cat}"><img src="${IMG(s.img)}" alt="" loading="lazy" onerror="this.remove()"><span class="cat">${CAT_LABEL[s.cat]}</span></div>
+    <div class="body">
+      <div class="badges"><span class="level ${cls}" style="margin:0">${label}</span>${s.nosignin ? `<span class="level lv-free" style="margin:0">No sign-in</span>` : ""}</div>
+      <p class="name">${s.name}</p>
+      <p class="by">by ${s.by}</p>
+      <p class="what">${s.what}</p>
+      ${s.flag ? `<div class="flag">${s.flag}</div>` : ""}
+      <div class="example"><b>Example</b>${esc(s.prompt).replace(/-/g, "‑")}</div>
+      <div class="guide">
+        <button class="guide-toggle" type="button" aria-expanded="false" aria-controls="${gid(s)}"><span class="hover-label">Hover to see instructions</span><span class="tap-label">Tap to see instructions</span>${CHEV}</button>
+        <div class="guide-body" id="${gid(s)}" role="region" aria-label="How to try ${s.name}"><div class="guide-inner">${steps(s)}</div></div>
+      </div>
+      <div class="get"><a href="${s.url}" target="_blank" rel="noopener">${s.urlLabel || "See details"}</a></div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const list = ITEMS.filter(s =>
+    (state.cat === "all" || s.cat === state.cat) &&
+    (!state.only || ONLY.test(s)) &&
+    (!q || (s.name + " " + s.by + " " + s.what + " " + s.prompt).toLowerCase().includes(q)));
+  document.getElementById("cards").innerHTML = list.map(card).join("") ||
+    `<p class="muted">Nothing matches that search.</p>`;
+  document.getElementById("count").textContent = list.length + " of " + ITEMS.length + " " + NOUN;
+}
+
+const filters = document.getElementById("filters");
+Object.keys(CATS).forEach(k => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.textContent = CATS[k];
+  b.style.marginRight = "6px";
+  b.setAttribute("aria-pressed", String(k === state.cat));
+  b.onclick = () => {
+    state.cat = k;
+    filters.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    render();
+  };
+  filters.appendChild(b);
+});
+const onlyBtn = document.getElementById("onlyBtn");
+onlyBtn.textContent = ONLY.label;
+onlyBtn.onclick = () => {
+  state.only = !state.only;
+  onlyBtn.setAttribute("aria-pressed", String(state.only));
+  render();
+};
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+
+/* Cards: copy buttons, and the instructions panel.
+   With a mouse it opens on hover and closes when the mouse leaves the panel. On touch screens a tap opens and closes it. */
+const cardsEl = document.getElementById("cards");
+const setGuide = (g, open) => {
+  g.classList.toggle("open", open);
+  g.querySelector(".guide-toggle").setAttribute("aria-expanded", String(open));
+};
+cardsEl.addEventListener("click", e => {
+  const btn = e.target.closest(".cp");
+  if (btn) {
+    const text = btn.parentElement.querySelector("code").dataset.copy;
+    const ok = () => {
+      btn.innerHTML = DONE_ICON; btn.classList.add("ok"); btn.setAttribute("aria-label", "Copied");
+      setTimeout(() => { btn.innerHTML = COPY_ICON; btn.classList.remove("ok"); btn.setAttribute("aria-label", "Copy"); }, 1500);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (err) {}
+      document.body.removeChild(ta); ok();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+    else fallback();
+    return;
+  }
+  const toggle = e.target.closest(".guide-toggle");
+  if (toggle) {
+    const g = toggle.closest(".guide");
+    setGuide(g, !g.classList.contains("open"));
+  }
+});
+cardsEl.addEventListener("mouseout", e => {
+  const g = e.target.closest(".guide");
+  if (g && !g.contains(e.relatedTarget)) setGuide(g, false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".guide.open").forEach(g => setGuide(g, false));
+});
+
+/* hero mosaic: the first 12 card photos */
+document.getElementById("mosaic").innerHTML = ITEMS.slice(0, 12)
+  .map(s => `<img src="${IMG(s.img)}" alt="" onerror="this.style.visibility='hidden'">`).join("");
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Own Tool</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --bad:#b3261e; --bad-soft:#fbe7e5;
+    --blue:#2a5db0; --blue-soft:#e4ecfa; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+      --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --bad:#f08a80; --bad-soft:#3a1b18;
+    --blue:#8db4f0; --blue-soft:#1a2639; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+  a{color:var(--accent)}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px;font-size:.9em;overflow-wrap:anywhere}
+  h2{font-size:clamp(24px,3.4vw,30px);line-height:1.2;margin:0 0 6px}
+  h3{font-size:18px;margin:0 0 6px;line-height:1.3}
+  p{margin:0 0 10px}
+  .lines span{display:block}
+  .muted{color:var(--muted)}
+
+  /* hero */
+  .hero{position:relative;border-radius:0 0 22px 22px;overflow:hidden;color:#fff;margin:0 -16px;min-height:340px;display:flex;align-items:flex-end}
+  .mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(2,1fr)}
+  .mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.25) 0%,rgba(10,10,10,.82) 70%)}
+  .hero-text{position:relative;z-index:1;padding:40px 28px 30px;max-width:780px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#ffb59a}
+  .hero h1{font-size:clamp(30px,5.4vw,50px);line-height:1.08;margin:8px 0 12px}
+  .hero p{font-size:18px;color:#eee;margin:0}
+
+  /* section nav */
+  .snav{position:sticky;top:0;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;margin-bottom:8px}
+  .snav a{flex:0 0 auto;text-decoration:none;color:var(--ink);font-size:14px;font-weight:600;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface)}
+  .snav a:hover{border-color:var(--accent)}
+  section{padding:40px 0 4px;scroll-margin-top:56px}
+  .intro{color:var(--muted);font-size:17px;margin-bottom:16px}
+  .intro code,.howto-steps li>span code{white-space:nowrap}
+
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stack{display:flex;flex-direction:column;gap:12px}
+  .stack .box{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 24px;align-items:start}
+  .stack .box>h3{margin:2px 0 0}
+  .stack .box p:last-child{margin-bottom:0}
+  .small{font-size:14px}
+  p,li,.lines span,.what,.example,.flag{text-wrap:pretty}
+  .cmd{overflow-wrap:normal;word-break:normal;white-space:pre-wrap}
+
+  .tip{background:var(--ok-soft);border-color:transparent}
+  .warnbox{background:var(--warn-soft);border-color:transparent}
+  .badbox{background:var(--bad-soft);border-color:transparent}
+  ul.clean{margin:6px 0 0;padding-left:20px}
+  ul.clean li{margin:4px 0}
+
+  /* trust levels */
+  .level{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+  .lv-anthropic{background:var(--ok-soft);color:var(--ok)}
+  .lv-official{background:var(--blue-soft);color:var(--blue)}
+  .lv-community{background:var(--warn-soft);color:var(--warn)}
+
+  /* gallery */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 16px}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 14px;border-radius:99px;cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .controls input{flex:1 1 200px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+  .count{font-size:14px;color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+  .pic{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#c4552d,#7a3cc4)}
+  .pic.business{background:linear-gradient(135deg,#2a5db0,#2f7d4f)}
+  .pic.productivity{background:linear-gradient(135deg,#9a6a00,#c4552d)}
+  .pic.gaming{background:linear-gradient(135deg,#5b2bb0,#0f8a9e)}
+  .rating{margin:0;font-size:13px;font-weight:700;color:var(--muted)}
+  .lv-top{background:var(--accent);color:#fff}
+  .pic img{width:100%;height:100%;object-fit:cover;display:block}
+  .cat{position:absolute;top:10px;left:10px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.62);color:#fff;backdrop-filter:blur(4px)}
+  .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:17px;font-weight:700;color:var(--accent);margin:0}
+  .by{font-size:13px;color:var(--muted);margin:-4px 0 2px}
+  .what{margin:0}
+  .flag{font-size:13px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:8px;padding:4px 9px}
+  .get{font-size:13px;margin-top:2px;padding-top:6px;border-top:1px solid var(--line)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .card{position:relative}
+  .example{font-size:14px;line-height:1.45;background:var(--code);border-radius:8px;padding:8px 10px}
+  .example b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  /* Instructions: closed by default. They drop down while the mouse is on the panel (or after a tap). */
+  .guide{border:1px dashed var(--line);border-radius:10px;transition:border-color .15s}
+  .guide-toggle{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent)}
+  .guide-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:9px}
+  .guide-toggle .chev{margin-left:auto;flex:none;transition:transform .2s}
+  .tap-label{display:none}
+  @media (hover:none){ .hover-label{display:none} .tap-label{display:inline} }
+  .guide-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+  .guide-inner{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s linear .22s}
+  .guide.open{border-color:var(--accent);border-style:solid}
+  .guide.open .guide-body{grid-template-rows:1fr}
+  .guide.open .guide-inner{visibility:visible;transition-delay:0s}
+  .guide.open .chev{transform:rotate(180deg)}
+  @media (hover:hover){
+    .guide:hover{border-color:var(--accent);border-style:solid}
+    .guide:hover .guide-body{grid-template-rows:1fr;transition-delay:.12s}
+    .guide:hover .guide-inner{visibility:visible;transition-delay:.12s}
+    .guide:hover .chev{transform:rotate(180deg)}
+  }
+  ol.howto-steps{margin:0 10px;padding:10px 2px 12px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45}
+  ol.howto-steps li::marker{font-weight:700;color:var(--accent)}
+  ol.howto-steps li>b{display:block;margin-bottom:3px}
+  ol.howto-steps li>span{display:block;text-wrap:pretty}
+  .small-hint{font-size:12px;color:var(--muted);margin-top:5px}
+  .cmdrow.prompt code{font-family:inherit;font-size:13px}
+  .cmdrow{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 8px;margin-top:4px}
+  .cmdrow code{flex:1;min-width:0;background:none;padding:0;font-size:12px;line-height:1.45;overflow-wrap:break-word;word-break:normal}
+  .stepno{flex:none;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;display:grid;place-items:center}
+  .cp{flex:none;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .cp:hover{border-color:var(--accent);color:var(--accent)}
+  .cp.ok{color:var(--ok);border-color:var(--ok)}
+  .cp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .install-what{font-size:13px;margin-top:8px;line-height:1.4}
+  .install-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+  /* steps */
+  ol.steps{margin:6px 0 0;padding-left:22px}
+  ol.steps li{margin:6px 0}
+  .cmd{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--code);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px;overflow-wrap:anywhere}
+  .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:12px 0 4px}
+  .quote{border-left:3px solid var(--bad);padding:4px 0 4px 12px;margin:10px 0;font-style:italic}
+  .quote cite{display:block;font-size:13px;font-style:normal;color:var(--muted)}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+  footer{margin-top:50px;color:var(--muted);font-size:14px}
+  button:focus-visible,.snav a:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:640px){
+    .stack .box{grid-template-columns:1fr}
+    .g4{grid-template-columns:1fr}
+    .cmd{overflow-wrap:anywhere}
+    .mosaic{grid-template-columns:repeat(3,1fr)}
+    .hero-text{padding:28px 18px 22px}
+  }
+  @media print{ .guide-toggle{display:none} .guide-body{grid-template-rows:1fr} .guide-inner{visibility:visible} .snav,.controls{display:none} .hero{color:#000;min-height:0}.hero::after,.mosaic{display:none} .hero p{color:#333} .eyebrow{color:var(--accent)} .card{break-inside:avoid} }
+
+  /* page 03-05 */
+  .code{background:#1f1d1a;color:#ece9e1;border-radius:12px;overflow:hidden;margin:8px 0 10px;border:1px solid #34322d}
+  .code-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;background:#2b2925;color:#cfc9bc;font:600 13px ui-monospace,SFMono-Regular,Consolas,monospace}
+  .code pre{margin:0;padding:12px 14px 14px;overflow-x:auto;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:4}
+  .code pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
+  .code .c{color:#9cc796}
+  .code .s{color:#e8bf7a}
+  .code .cp{background:transparent;color:#ece9e1;border-color:#4a4740}
+  .code .cp:hover{border-color:#e8845f;color:#e8845f}
+  .grid.ways{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .ways .box{display:flex;flex-direction:column;gap:6px}
+  .ways .level{align-self:flex-start;margin-bottom:2px}
+  .ways .box h3{margin:0}
+  .ways .best{font-size:14px;color:var(--muted);margin:0}
+  .ways .cmdrow code{font-size:12px}
+  ol.notes{margin:6px 0 0;padding-left:22px}
+  ol.notes li{margin:3px 0}
+  .answer{font-size:14px;color:var(--muted);margin:4px 0 12px}
+  table.cmp{width:100%;border-collapse:collapse;font-size:15px;background:var(--surface);border-radius:12px;overflow:hidden}
+  table.cmp th,table.cmp td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.cmp th{background:var(--code);font-size:14px}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:12px}
+  .cmdrow{background:var(--surface)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="mosaic" aria-hidden="true"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"><img src="https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?w=640&h=400&q=70&auto=format&fit=crop" alt="" onerror="this.style.visibility='hidden'"></div>
+  <div class="hero-text">
+    <div class="eyebrow">Lesson one &middot; Topic 3.5</div>
+    <h1>Build your own tool</h1>
+    <p class="lines">
+      <span>Turn your own business rules into a tool Claude can use.</span>
+      <span>In Python, with Claude's help, in about 30 minutes.</span>
+    </p>
+  </div>
+</header>
+
+<nav class="snav" aria-label="Sections">
+  <a href="#why">Why</a>
+  <a href="#ways">5 ways</a>
+  <a href="#build">Build it</a>
+  <a href="#connect">Connect</a>
+  <a href="#use">Use it</a>
+  <a href="#good">Good tools</a>
+  <a href="#skill">Skill + script</a>
+  <a href="#ts">TypeScript</a>
+  <a href="#share">Share</a>
+  <a href="#safe">Stay safe</a>
+  <a href="#try">Try it</a>
+</nav>
+
+<!-- WHY -->
+<section id="why">
+  <h2>Why build your own tool?</h2>
+  <div class="grid g3">
+    <div class="box">
+      <h3>Your rules, exactly</h3>
+      <p class="lines">
+        <span>Price rules, delivery fees, stock levels, order numbers.</span>
+        <span>Ready-made tools don't know how your business works.</span>
+        <span>Your tool does, because you wrote the rules.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Exact answers, every time</h3>
+      <p class="lines">
+        <span>Claude can slip on long sums and lookups.</span>
+        <span>A tool runs your code, so the result is exact.</span>
+        <span>Claude then explains it in plain words.</span>
+      </p>
+    </div>
+    <div class="box tip">
+      <h3>What we build here</h3>
+      <p class="lines">
+        <span>A Greenleaf tool with 3 abilities:</span>
+        <span><code>order_status</code> looks up one order.</span>
+        <span><code>late_orders</code> lists late and delayed orders.</span>
+        <span><code>delivery_fee</code> works out the delivery cost.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- WAYS -->
+<section id="ways">
+  <h2>5 ways to make a tool</h2>
+  <p class="intro">Start with the first two. The others are for later.</p>
+  <div class="grid g3 ways">
+    <div class="box">
+      <span class="level lv-anthropic">Easiest</span>
+      <h3>1. Ask Claude to build it</h3>
+      <p class="lines">
+        <span>An Anthropic plugin interviews you and writes the code.</span>
+        <span>You describe the job. Claude builds the tool.</span>
+      </p>
+      <p class="best">Best for: your first tool, even if you don't code.</p>
+      <div class="cmdrow"><span class="stepno">1</span><code data-copy="/plugin install mcp-server-dev@claude-plugins-official">/plugin install mcp‑server‑dev@<wbr>claude‑plugins‑official</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      <div class="cmdrow"><span class="stepno">2</span><code data-copy="/mcp-server-dev:build-mcp-server">/mcp‑server‑dev:build‑mcp‑server</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    </div>
+    <div class="box">
+      <span class="level lv-official">This page</span>
+      <h3>2. Python, with the MCP SDK</h3>
+      <p class="lines">
+        <span>One Python function becomes one tool.</span>
+        <span>The SDK handles everything else for you.</span>
+      </p>
+      <p class="best">Best for: tools that use your own files and data.</p>
+    </div>
+    <div class="box">
+      <span class="level lv-official">No MCP needed</span>
+      <h3>3. A skill with a script</h3>
+      <p class="lines">
+        <span>A skill folder with instructions and a small script.</span>
+        <span>Claude runs the script when the skill fits.</span>
+      </p>
+      <p class="best">Best for: one job, used in Claude Code.</p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">For developers</span>
+      <h3>4. TypeScript, with Node.js</h3>
+      <p class="lines">
+        <span>The same idea, in the language of web apps.</span>
+        <span>Java, C#, Go and others have MCP kits too.</span>
+      </p>
+      <p class="best">Best for: teams that already build web apps.</p>
+    </div>
+    <div class="box">
+      <span class="level lv-community">Advanced</span>
+      <h3>5. Online, as a connector</h3>
+      <p class="lines">
+        <span>Run your tool on the internet, with a web address.</span>
+        <span>Add it on claude.ai as a custom connector.</span>
+      </p>
+      <p class="best">Best for: a whole team, in every Claude app.</p>
+    </div>
+  </div>
+  <p class="muted small" style="margin-top:12px">Building your own AI app? The <a href="https://code.claude.com/docs/en/agent-sdk/custom-tools" target="_blank" rel="noopener">Claude Agent SDK</a> lets you add custom tools in code.</p>
+</section>
+
+<!-- BUILD -->
+<section id="build">
+  <h2>Build it in Python, step by step</h2>
+  <p class="intro">The finished tool is in the <code>03-05-tool-files</code> folder. Read it, run it, then change it.</p>
+  <div class="stack">
+    <div class="box">
+      <h3>1. Install uv, once</h3>
+      <div>
+        <p class="lines">
+          <span>uv is a small free program that runs Python for you.</span>
+          <span>It downloads the right Python version by itself.</span>
+        </p>
+        <p class="label">Windows (PowerShell)</p>
+        <div class="cmdrow"><code data-copy="powershell -ExecutionPolicy ByPass -c &quot;irm https://astral.sh/uv/install.ps1 | iex&quot;">powershell ‑ExecutionPolicy ByPass ‑c &quot;irm https://astral.sh/<wbr>uv/<wbr>install.ps1 | iex&quot;</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="label">Mac</p>
+        <div class="cmdrow"><code data-copy="curl -LsSf https://astral.sh/uv/install.sh | sh">curl ‑LsSf https://astral.sh/<wbr>uv/<wbr>install.sh | sh</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="muted small">Restart VS Code after installing, so it can find uv.</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>2. Open the practice folder</h3>
+      <div>
+        <p class="lines"><span>Open <code>03-05-tool-files</code> in VS Code. Inside:</span></p>
+        <ul class="clean">
+          <li><code>orders.csv</code>: 20 Greenleaf orders, with status and promised date.</li>
+          <li><code>server.py</code>: the tool itself, with 3 abilities.</li>
+          <li><code>.mcp.json</code>: tells Claude Code how to start the tool.</li>
+          <li><code>.claude/skills/price-quote/</code>: way 3, a skill with a script.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box">
+      <h3>3. Read the code</h3>
+      <div>
+        <div class="code"><div class="code-h"><span>server.py</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code><span class="s">&quot;&quot;&quot;Greenleaf tools: a small MCP server that lets Claude look up orders and delivery fees.</span>
+<span class="s"></span>
+<span class="s">Fictional practice data for the Claude Code course.</span>
+<span class="s">Claude Code starts it for you (see .mcp.json). To start it by hand:</span>
+<span class="s">    uv run --python 3.12 --with &quot;mcp[cli]&gt;=2&quot; mcp run server.py</span>
+<span class="s">&quot;&quot;&quot;</span>
+import csv
+from pathlib import Path
+
+from mcp.server import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
+
+<span class="c"># 1. Give the server a name. Claude Code shows it in /mcp.</span>
+mcp = MCPServer(&quot;greenleaf&quot;)
+
+ORDERS_FILE = Path(__file__).parent / &quot;orders.csv&quot;
+LATE = (&quot;Delivered late&quot;, &quot;Delayed&quot;)
+
+
+def load_orders() -&gt; list[dict]:
+<span class="s">    &quot;&quot;&quot;Read orders.csv. The tools below use this; it is not a tool itself.&quot;&quot;&quot;</span>
+    with open(ORDERS_FILE, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+        return list(csv.DictReader(f))
+
+
+<span class="c"># 2. Each @mcp.tool() turns one Python function into one tool.</span>
+<span class="c"># 3. The docstring tells Claude what the tool does and when to use it.</span>
+<span class="c"># 4. The type hints (order_id: str) tell Claude what to send.</span>
+@mcp.tool()
+def order_status(order_id: str) -&gt; dict:
+<span class="s">    &quot;&quot;&quot;Look up one Greenleaf order by its number, like GL-1007.</span>
+<span class="s">    Returns the customer, items, total, status and promised delivery date.&quot;&quot;&quot;</span>
+    wanted = order_id.strip().upper()
+    for order in load_orders():
+        if order[&quot;order_id&quot;] == wanted:
+            return order
+<span class="c">    # 5. Raise ToolError for a problem Claude can fix. Claude reads the message and tries again.</span>
+    raise ToolError(f&quot;There is no order {wanted}. Order numbers look like GL-1001.&quot;)
+
+
+@mcp.tool()
+def late_orders() -&gt; list[dict]:
+<span class="s">    &quot;&quot;&quot;List all Greenleaf orders that are delayed or were delivered late.&quot;&quot;&quot;</span>
+    return [order for order in load_orders() if order[&quot;status&quot;] in LATE]
+
+
+@mcp.tool()
+def delivery_fee(order_total_usd: float, express: bool = False) -&gt; dict:
+<span class="s">    &quot;&quot;&quot;Work out Greenleaf&#x27;s delivery fee for an order.</span>
+<span class="s">    Standard delivery costs $8, and is free for orders of $300 or more.</span>
+<span class="s">    Express delivery adds $12.&quot;&quot;&quot;</span>
+    if order_total_usd &lt; 0:
+        raise ToolError(&quot;The order total can&#x27;t be negative.&quot;)
+    fee = 0 if order_total_usd &gt;= 300 else 8
+    if express:
+        fee += 12
+    return {&quot;order_total_usd&quot;: order_total_usd, &quot;express&quot;: express, &quot;delivery_fee_usd&quot;: fee}
+
+
+<span class="c"># 6. Start the server when this file is run.</span>
+if __name__ == &quot;__main__&quot;:
+    mcp.run()</code></pre></div>
+        <ol class="notes">
+          <li>A name for your server. You'll see it in <code>/mcp</code>.</li>
+          <li><code>@mcp.tool()</code> turns a normal function into a tool.</li>
+          <li>The docstring is the tool's instructions for Claude.</li>
+          <li>Type hints, like <code>order_id: str</code>, say what Claude must send.</li>
+          <li><code>ToolError</code> tells Claude what went wrong, so it can try again.</li>
+          <li><code>mcp.run()</code> starts the server and waits for Claude.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="box">
+      <h3>4. Test it alone (optional)</h3>
+      <div>
+        <p class="lines">
+          <span>The MCP Inspector opens a test page in your browser.</span>
+          <span>Pick a tool, fill in the form, and run it.</span>
+        </p>
+        <div class="cmdrow"><code data-copy="uv run --python 3.12 --with &quot;mcp[cli]&gt;=2&quot; mcp dev server.py">uv run ‑‑python 3.12 ‑‑with &quot;mcp[cli]&gt;=2&quot; mcp dev server.py</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="muted small">The Inspector needs Node.js. You can skip this step.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONNECT -->
+<section id="connect">
+  <h2>Connect it to Claude Code</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>The .mcp.json file</h3>
+      <div>
+        <p class="lines">
+          <span>This file tells Claude Code how to start your tool.</span>
+          <span>It's already in the practice folder.</span>
+        </p>
+        <div class="code"><div class="code-h"><span>.mcp.json</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;greenleaf&quot;: {
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;uv&quot;,
+      &quot;args&quot;: [&quot;run&quot;, &quot;--python&quot;, &quot;3.12&quot;, &quot;--with&quot;, &quot;mcp[cli]&gt;=2&quot;, &quot;mcp&quot;, &quot;run&quot;, &quot;server.py&quot;]
+    }
+  }
+}</code></pre></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Approve it</h3>
+      <p class="lines">
+        <span>Open the folder in VS Code and start a new chat.</span>
+        <span>Claude Code asks you to approve the <b>greenleaf</b> server.</span>
+        <span>A server you don't know? Don't approve it.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Check it</h3>
+      <p class="lines">
+        <span>Type <code>/mcp</code>. greenleaf should say <b>Connected</b>.</span>
+        <span>Choose it to see its 3 tools.</span>
+        <span>The first start can take a minute, while uv downloads Python.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Or from the terminal</h3>
+      <div>
+        <p class="lines"><span>If you use the Claude Code command line, use the full path to server.py:</span></p>
+        <div class="cmdrow"><code data-copy="claude mcp add greenleaf -- uv run --python 3.12 --with &quot;mcp[cli]&gt;=2&quot; mcp run C:/path/to/03-05-tool-files/server.py">claude mcp add greenleaf ‑‑ uv run ‑‑python 3.12 ‑‑with &quot;mcp[cli]&gt;=2&quot; mcp run C:/path/<wbr>to/<wbr>03‑05‑tool‑files/<wbr>server.py</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- USE -->
+<section id="use">
+  <h2>Use your tool</h2>
+  <p class="intro">Just ask. Claude asks before it uses your tool, so allow it.</p>
+  <div class="box">
+    <div class="cmdrow prompt"><code data-copy="What is the status of order GL-1007?">What is the status of order GL-1007?</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    <p class="answer">Ruth B. ordered 2 chairs and 1 ink cartridge for $423. It's delayed: it was promised for 4 November.</p>
+    <div class="cmdrow prompt"><code data-copy="Which orders are late? Suggest one short apology sentence for each customer.">Which orders are late? Suggest one short apology sentence for each customer.</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    <p class="answer">5 orders: GL-1002, GL-1004, GL-1006, GL-1007 and GL-1011, each with an apology.</p>
+    <div class="cmdrow prompt"><code data-copy="How much is delivery for a $240 order with express?">How much is delivery for a $240 order with express?</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    <p class="answer">$20: $8 for standard delivery, plus $12 for express.</p>
+    <div class="cmdrow prompt"><code data-copy="What is the status of order GL-9999?">What is the status of order GL-9999?</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    <p class="answer" style="margin-bottom:0">Claude says there is no such order. That message comes from your ToolError.</p>
+  </div>
+</section>
+
+<!-- GOOD -->
+<section id="good">
+  <h2>How to write a tool Claude uses well</h2>
+  <div class="grid g2">
+    <div class="box tip">
+      <h3>Do</h3>
+      <ul class="clean">
+        <li>Give each tool a clear name, like <code>order_status</code>.</li>
+        <li>Write the docstring for Claude: what it does, and when to use it.</li>
+        <li>Keep inputs few and simple, with type hints.</li>
+        <li>Give each tool one job.</li>
+        <li>Start with tools that only read and calculate.</li>
+        <li>Raise <code>ToolError</code> with a helpful message.</li>
+      </ul>
+    </div>
+    <div class="box badbox">
+      <h3>Don't</h3>
+      <ul class="clean">
+        <li>Put passwords or keys in the code.</li>
+        <li>Return an error as normal text. Claude will think it worked.</li>
+        <li>Send back huge amounts of data. Return only what's needed.</li>
+        <li>Let a tool delete, send or pay without a check.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box" style="margin-top:14px">
+    <h3>Keys and passwords</h3>
+    <p class="lines">
+      <span>Keep them out of the code, in your computer's environment variables.</span>
+      <span>Pass them to the tool in <code>.mcp.json</code>, then read them in Python:</span>
+    </p>
+    <div class="code"><div class="code-h"><span>.mcp.json (part)</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>&quot;env&quot;: { &quot;SHOP_API_KEY&quot;: &quot;${SHOP_API_KEY}&quot; }</code></pre></div>
+    <div class="code"><div class="code-h"><span>server.py (part)</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>import os
+api_key = os.environ[&quot;SHOP_API_KEY&quot;]</code></pre></div>
+  </div>
+</section>
+
+<!-- SKILL -->
+<section id="skill">
+  <h2>The other way: a skill with a script</h2>
+  <p class="intro">No server and no MCP. Just a folder with instructions and a script.</p>
+  <div class="stack">
+    <div class="box">
+      <h3>The instructions</h3>
+      <div>
+        <p class="lines"><span>Claude reads this file and knows when and how to run the script.</span></p>
+        <div class="code"><div class="code-h"><span>.claude/skills/price-quote/SKILL.md</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>---
+name: price-quote
+description: Makes a price quote for Greenleaf products, with bulk discounts. Use it when someone asks for a quote, an offer or a total price for several Greenleaf products.
+---
+
+# Greenleaf price quote
+
+1. Find each product and its quantity in the request.
+   Products: Office chair, Printer paper (box), Ink cartridge.
+2. Run the script, with one &quot;product=quantity&quot; pair per product:
+
+   uv run ${CLAUDE_SKILL_DIR}/quote.py &quot;Office chair=12&quot; &quot;Printer paper (box)=60&quot;
+
+3. Show the script&#x27;s table as it is. Never work out the prices yourself.
+4. End with one friendly sentence the salesperson can send to the customer.</code></pre></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>The script</h3>
+      <div>
+        <p class="lines"><span>Plain Python that does the math, so prices are always right.</span></p>
+        <div class="code"><div class="code-h"><span>.claude/skills/price-quote/quote.py</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code><span class="s">&quot;&quot;&quot;Greenleaf price quote. Usage: uv run quote.py &quot;Office chair=12&quot; &quot;Printer paper (box)=60&quot;</span>
+<span class="s">Fictional prices for the Claude Code course. Uses only built-in Python, nothing to install.&quot;&quot;&quot;</span>
+import sys
+
+PRICES = {&quot;Office chair&quot;: 189.00, &quot;Printer paper (box)&quot;: 32.00, &quot;Ink cartridge&quot;: 45.00}
+BULK = {&quot;Office chair&quot;: (10, 0.10), &quot;Printer paper (box)&quot;: (50, 0.15)}  <span class="c"># (minimum quantity, discount)</span>
+
+total = 0.0
+print(f&quot;{&#x27;Product&#x27;:&lt;22}{&#x27;Qty&#x27;:&gt;5}{&#x27;Price&#x27;:&gt;10}{&#x27;Discount&#x27;:&gt;10}{&#x27;Line total&#x27;:&gt;12}&quot;)
+for arg in sys.argv[1:]:
+    name, _, qty = arg.partition(&quot;=&quot;)
+    name = name.strip()
+    if name not in PRICES or not qty.strip().isdigit():
+        sys.exit(f&quot;Can&#x27;t read &#x27;{arg}&#x27;. Use names from this list: {&#x27;, &#x27;.join(PRICES)}&quot;)
+    qty = int(qty)
+    minimum, rate = BULK.get(name, (0, 0.0))
+    discount = rate if minimum and qty &gt;= minimum else 0.0
+    line = qty * PRICES[name] * (1 - discount)
+    total += line
+    print(f&quot;{name:&lt;22}{qty:&gt;5}{PRICES[name]:&gt;10.2f}{discount:&gt;10.0%}{line:&gt;12.2f}&quot;)
+print(f&quot;{&#x27;Total (USD)&#x27;:&lt;57}{total:&gt;12.2f}&quot;)</code></pre></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Try it</h3>
+      <div>
+        <div class="cmdrow prompt"><code data-copy="Make a quote for 12 office chairs, 60 boxes of printer paper and 3 ink cartridges.">Make a quote for 12 office chairs, 60 boxes of printer paper and 3 ink cartridges.</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="answer" style="margin-bottom:0">A table with both bulk discounts, and a total of $3,808.20.</p>
+      </div>
+    </div>
+  </div>
+  <div class="tablewrap">
+    <table class="cmp">
+      <tr><th></th><th>Skill with a script</th><th>MCP server</th></tr>
+      <tr><td><b>Setup</b></td><td>A folder with two files</td><td>A small server, started by Claude Code</td></tr>
+      <tr><td><b>How Claude runs it</b></td><td>Types a command, with permission</td><td>Calls the tool directly, with checked inputs</td></tr>
+      <tr><td><b>Works in</b></td><td>Claude Code</td><td>Claude Code, the Claude desktop app and other AI apps</td></tr>
+      <tr><td><b>Best for</b></td><td>One job for you or your team</td><td>Tools many people and apps will use</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- TS -->
+<section id="ts">
+  <h2>The same tool in TypeScript</h2>
+  <p class="intro">For people who build web apps. Not needed for the exercise.</p>
+  <div class="stack">
+    <div class="box">
+      <h3>1. Install</h3>
+      <div>
+        <p class="lines"><span>In a new folder, with Node.js installed:</span></p>
+        <div class="cmdrow"><code data-copy="npm install @modelcontextprotocol/server zod">npm install @<wbr>modelcontextprotocol/<wbr>server zod</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      </div>
+    </div>
+    <div class="box">
+      <h3>2. Write the tool</h3>
+      <div><div class="code"><div class="code-h"><span>server.mjs</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>import { McpServer } from &#x27;@modelcontextprotocol/server&#x27;;
+import { StdioServerTransport } from &#x27;@modelcontextprotocol/server/stdio&#x27;;
+import * as z from &#x27;zod/v4&#x27;;
+
+const server = new McpServer({ name: &#x27;greenleaf-ts&#x27;, version: &#x27;1.0.0&#x27; });
+
+server.registerTool(
+  &#x27;delivery_fee&#x27;,
+  {
+    description: &quot;Work out Greenleaf&#x27;s delivery fee. Standard costs $8, free from $300. Express adds $12.&quot;,
+    inputSchema: z.object({ order_total_usd: z.number(), express: z.boolean().default(false) })
+  },
+  async ({ order_total_usd, express }) =&gt; {
+    const fee = (order_total_usd &gt;= 300 ? 0 : 8) + (express ? 12 : 0);
+    return { content: [{ type: &#x27;text&#x27;, text: `Delivery fee: $${fee}` }] };
+  }
+);
+
+await server.connect(new StdioServerTransport());</code></pre></div></div>
+    </div>
+    <div class="box">
+      <h3>3. Connect it</h3>
+      <div>
+        <p class="lines"><span>Same .mcp.json idea, with a different start command:</span></p>
+        <div class="code"><div class="code-h"><span>.mcp.json</span><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;greenleaf-ts&quot;: { &quot;type&quot;: &quot;stdio&quot;, &quot;command&quot;: &quot;node&quot;, &quot;args&quot;: [&quot;server.mjs&quot;] }
+  }
+}</code></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHARE -->
+<section id="share">
+  <h2>Share your tool</h2>
+  <div class="stack">
+    <div class="box">
+      <h3>In a shared folder</h3>
+      <p class="lines">
+        <span>Keep server.py and .mcp.json in the project folder.</span>
+        <span>Teammates open the folder and approve the server.</span>
+        <span>Teams usually share project folders through Git.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>In the Claude desktop app</h3>
+      <div>
+        <p class="lines"><span>One command adds your tool to the desktop app:</span></p>
+        <div class="cmdrow"><code data-copy="uv run --python 3.12 --with &quot;mcp[cli]&gt;=2&quot; mcp install server.py">uv run ‑‑python 3.12 ‑‑with &quot;mcp[cli]&gt;=2&quot; mcp install server.py</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="muted small">Then fully quit the desktop app and open it again.</p>
+      </div>
+    </div>
+    <div class="box">
+      <h3>As a plugin</h3>
+      <p class="lines">
+        <span>A plugin can hold your tool, skills and commands together.</span>
+        <span>Teammates install everything with one command.</span>
+      </p>
+    </div>
+    <div class="box">
+      <h3>Online, as a connector</h3>
+      <div>
+        <p class="lines">
+          <span>The same server can run on the internet, over HTTP:</span>
+        </p>
+        <div class="cmdrow"><code data-copy="uv run --python 3.12 --with &quot;mcp[cli]&gt;=2&quot; mcp run server.py --transport streamable-http">uv run ‑‑python 3.12 ‑‑with &quot;mcp[cli]&gt;=2&quot; mcp run server.py ‑‑transport streamable‑http</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        <p class="lines">
+          <span>Host it, then add its address on claude.ai as a custom connector.</span>
+          <span>This needs hosting and sign-in. Ask a developer to help.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SAFE -->
+<section id="safe">
+  <h2>Stay safe</h2>
+  <div class="grid g2">
+    <div class="box badbox">
+      <h3>Remember</h3>
+      <ul class="clean">
+        <li>Your tool runs on your computer, with your permissions.</li>
+        <li>A tool can read any file your code points it to.</li>
+        <li>Approve only servers you wrote or trust.</li>
+      </ul>
+    </div>
+    <div class="box tip">
+      <h3>Good habits</h3>
+      <ul class="clean">
+        <li>Start read-only: look up and calculate first.</li>
+        <li>Test with practice data, never real customer files.</li>
+        <li>Keep the permission prompt on until you trust the tool.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- TRY -->
+<section id="try">
+  <h2>Try it yourself: use it, then extend it</h2>
+  <p class="intro">About 25 minutes. Use the <code>03-05-tool-files</code> folder.</p>
+  <div class="box">
+    <ol class="steps">
+      <li>Install uv (step 1 above) and restart VS Code.</li>
+      <li>Open <code>03-05-tool-files</code> and start a new chat. Approve <b>greenleaf</b>.</li>
+      <li>Type <code>/mcp</code>. Is greenleaf Connected, with 3 tools?</li>
+      <li>Ask:
+        <div class="cmdrow prompt"><code data-copy="What is the status of order GL-1007?">What is the status of order GL-1007?</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+        When Claude asks to use the tool, allow it.
+      </li>
+      <li>Now let Claude extend your tool. Ask:
+        <div class="cmdrow prompt"><code data-copy="Add a fourth tool to server.py called customer_orders. It lists all orders for one customer. Follow the style of the other tools.">Add a fourth tool to server.py called customer_orders. It lists all orders for one customer. Follow the style of the other tools.</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      </li>
+      <li>Type <code>/mcp</code>, choose greenleaf, and reconnect it.</li>
+      <li>Ask:
+        <div class="cmdrow prompt"><code data-copy="Which orders did Orbit Systems place?">Which orders did Orbit Systems place?</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      </li>
+      <li>Try the skill way too:
+        <div class="cmdrow prompt"><code data-copy="Make a quote for 12 office chairs, 60 boxes of printer paper and 3 ink cartridges.">Make a quote for 12 office chairs, 60 boxes of printer paper and 3 ink cartridges.</code><button class="cp" type="button" title="Copy" aria-label="Copy"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+      </li>
+    </ol>
+    <details><summary>Check yourself</summary>
+      <div class="lines" style="margin-top:6px">
+        <span>Step 3: greenleaf shows 3 tools: order_status, late_orders and delivery_fee.</span>
+        <span>Step 4: Ruth B., $423, delayed, promised for 4 November.</span>
+        <span>Step 6: after reconnecting, greenleaf shows 4 tools.</span>
+        <span>Step 7: GL-1004 (delayed, $640) and GL-1017 (processing, $2,041.20).</span>
+        <span>Step 8: a total of $3,808.20, with 10% off chairs and 15% off paper.</span>
+      </div>
+    </details>
+  </div>
+  <div class="box tip" style="margin-top:14px">
+    <h3>Summary</h3>
+    <p class="lines">
+      <span>A custom tool turns your business rules into exact answers.</span>
+      <span>In Python, one function with a docstring becomes one tool.</span>
+      <span>Connect it with .mcp.json, check it in /mcp, and start read-only.</span>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p class="lines">
+    <span>Sources: <a href="https://py.sdk.modelcontextprotocol.io/" target="_blank" rel="noopener">MCP Python SDK</a>, <a href="https://github.com/modelcontextprotocol/typescript-sdk" target="_blank" rel="noopener">MCP TypeScript SDK</a>, and the Claude Code documentation on MCP and skills.</span>
+    <span>All code on this page was tested in November 2026 with mcp 2.3.0 and @modelcontextprotocol/server 2.4.0.</span>
+    <span>Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>.</span>
+  </p>
+</footer>
+</div>
+
+<script>
+/* Copy buttons: a command row copies its data-copy text; a code block copies its whole code. */
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+const DONE_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".cp");
+  if (!btn) return;
+  const row = btn.closest(".cmdrow");
+  const text = row ? row.querySelector("code").dataset.copy : btn.closest(".code").querySelector("pre").textContent;
+  const ok = () => {
+    btn.innerHTML = DONE_ICON; btn.classList.add("ok"); btn.setAttribute("aria-label", "Copied");
+    setTimeout(() => { btn.innerHTML = COPY_ICON; btn.classList.remove("ok"); btn.setAttribute("aria-label", "Copy"); }, 1500);
+  };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (err) {}
+    document.body.removeChild(ta); ok();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+  else fallback();
+});
+</script>
+</body>
+</html>

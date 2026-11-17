@@ -1,0 +1,9 @@
+Greenleaf Office Supplies - November chair sale
+(Fictional practice data for the Claude Code course.)
+
+Headline: 20% off all office chairs
+Dates: 1 to 30 November 2026
+Offer: the ergonomic office chair drops from $189 to $151.20
+Extra: free delivery on orders of 4 chairs or more
+Message: Sit better, work better. Your back will thank you.
+Website: greenleaf.example

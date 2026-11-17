@@ -1,0 +1,23 @@
+Greenleaf Office Supplies - Weekly team meeting, transcript
+Date: Monday, 2 November 2026. Length: about 12 minutes.
+(Fictional practice data for the Claude Code course.)
+
+[00:00] Ronit: Okay, let's start. Um, so, deliveries. This is, like, the big one this week. I've been looking at the numbers and honestly it's not good. One in four orders late. I think we need to move fast, and I think, you know, we should probably just switch delivery partners. I already have some ideas.
+[01:10] Avi: Can I just -
+[01:12] Ronit: One second, Avi. Let me finish. So the two business customers, Levin and Partners and Hila's company, they both said they might leave. That's real money. So I want a decision today if possible.
+[01:45] Avi: Sure. So, um, the partner was short on drivers in October. I think it's a temporary thing, but I've also started talking to a second company. I'm meeting them Wednesday.
+[02:20] Ronit: Good, good. Galit, what are customers saying?
+[02:25] Galit: Mostly late deliveries. Also wrong items, and, um, that we answer slowly. We're two people for about 300 messages a week, so -
+[02:40] Ronit: Right, but we can't hire right now.
+[02:43] Galit: I know. I was going to suggest ready-made answers for the most common questions, so we -
+[02:50] Ronit: Yes, do that. Great idea. Ben, sales?
+[02:55] Ben: Chairs are up. Like, really up compared to last October. Paper is flat. I think the bulk discount helped with chairs.
+[03:20] Ronit: Should we push paper harder then?
+[03:25] Ben: Honestly, I'm not sure we should promote anything while deliveries are late. I mean, it's, you know, more orders that arrive late.
+[03:40] Ronit: Hmm. Okay. I hear you. Let's, um, let's maybe pause the paper promotion. Avi, the wrong items, what's going on there?
+[04:00] Avi: Two products have almost the same code in the warehouse system. People pick the wrong one. I can rename them this week.
+[04:15] Ronit: Do it. And I'll call the two unhappy customers myself. Anything else?
+[04:22] Galit: Just that the tracking link in our emails doesn't work. Customers mention it a lot.
+[04:30] Ronit: Okay, um, let's add that to Avi's list. Avi?
+[04:33] Avi: Sure. I mean, I'll try.
+[04:36] Ronit: Great. So: Avi, delivery company and product codes and tracking link. Galit, ready-made answers. Ben, pause paper. Me, the two customers. Next week same time. Thanks everyone.

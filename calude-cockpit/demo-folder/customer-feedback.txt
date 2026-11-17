@@ -1,0 +1,47 @@
+Greenleaf Office Supplies - Customer feedback, October 2026
+(Fictional practice data for the Claude Code course. All names are made up.)
+
+1. Dana R., email, 2 Oct
+My order of printer paper arrived 6 days late. We ran out at the office and had to buy paper at a shop around the corner for double the price.
+
+2. Michael T., website form, 3 Oct
+Great prices on ink cartridges. The checkout was fast and simple. Will order again.
+
+3. Office manager, Levin & Partners, phone call, 5 Oct
+We ordered 4 office chairs and received 4 chairs, but two were the wrong model. We wanted the black ergonomic ones, not the grey basic ones.
+
+4. Noa S., email, 7 Oct
+I sent two emails about my late delivery and nobody answered for four days. When someone finally replied, the answer was a copy-paste text.
+
+5. Amit K., website form, 9 Oct
+Delivery was promised for Tuesday. It came the following Monday. Nobody told us about the delay.
+
+6. Ruth B., email, 11 Oct
+The ink cartridges in my order were for a different printer than the one I selected. I had to return them and wait again.
+
+7. Yossi M., phone call, 12 Oct
+The driver was very polite and helped carry the boxes upstairs. Thank you!
+
+8. Hila G., email, 14 Oct
+Third late delivery this year. If this happens again we will move to another supplier.
+
+9. Finance team, Orbit Systems, email, 16 Oct
+We received an invoice for 10 boxes of paper but only 8 boxes arrived. Please fix the invoice.
+
+10. Lior P., website form, 18 Oct
+I asked a question in the chat about bulk discounts. It took three days to get an answer, and by then we had already ordered elsewhere.
+
+11. Tamar E., email, 20 Oct
+Order arrived late again, and one box was damaged. The paper inside was wet.
+
+12. David A., website form, 22 Oct
+Wrong colour of folders arrived. I ordered blue and got red. Small thing, but annoying.
+
+13. Shira L., phone call, 24 Oct
+Customer service was friendly but slow. I waited 25 minutes on the phone.
+
+14. Eitan W., email, 27 Oct
+Good quality chairs, my team loves them. The assembly instructions were confusing though.
+
+15. Maya D., email, 30 Oct
+The delivery was late and the tracking link did not work, so I could not see where my order was.

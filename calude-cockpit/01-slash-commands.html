@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slash Commands Teaching Guide</title>
+<style>
+  :root{
+    --bg:#faf9f6; --surface:#ffffff; --ink:#1d1d1b; --muted:#6a675f; --line:#e4e0d6;
+    --accent:#c4552d; --accent-soft:#fbe9e2; --ok:#2f7d4f; --ok-soft:#e3f2e9;
+    --warn:#9a6a00; --warn-soft:#fdf1d3; --code:#f1eee6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+      --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+      --warn:#e5b94e; --warn-soft:#33290f; --code:#2a2824;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161513; --surface:#1f1e1b; --ink:#ece9e1; --muted:#a09c91; --line:#34322d;
+    --accent:#e8845f; --accent-soft:#3a2219; --ok:#6cc18d; --ok-soft:#1c2e23;
+    --warn:#e5b94e; --warn-soft:#33290f; --code:#2a2824;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:0 16px 80px}
+  header{padding:48px 0 24px}
+  .eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-size:clamp(28px,5vw,42px);line-height:1.15;margin:8px 0 12px}
+  h2{font-size:26px;margin:56px 0 6px;line-height:1.2}
+  h3{font-size:18px;margin:0}
+  p{margin:0 0 12px}
+  .lede{font-size:18px;color:var(--muted);max-width:720px}
+  code,.cmd{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+  code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:.92em}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .box.tip{background:var(--ok-soft);border-color:transparent}
+  .box.warn{background:var(--warn-soft);border-color:transparent}
+  .box h3{margin-bottom:6px}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:16px 0}
+  .grid3 .box{margin:0}
+  ol.flow{padding-left:0;list-style:none;counter-reset:s;margin:12px 0}
+  ol.flow li{counter-increment:s;position:relative;padding:10px 0 10px 46px;border-bottom:1px solid var(--line)}
+  ol.flow li:last-child{border:0}
+  ol.flow li::before{content:counter(s);position:absolute;left:0;top:10px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+  .toolbar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .toolbar input{flex:1 1 200px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:99px;cursor:pointer;font:inherit;font-size:14px}
+  .chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .tier-intro{color:var(--muted);margin-bottom:16px;max-width:760px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}
+  .card-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:10px}
+  .cmd{font-size:20px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:2px 10px;border-radius:8px}
+  .alias{font-size:13px;color:var(--muted)}
+  .req{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+  .oneliner{font-weight:600;margin:0 0 12px;text-wrap:pretty}
+  .oneliner span{display:block}
+  .oneliner span+span{margin-top:3px}
+  .rows{display:grid;grid-template-columns:130px 1fr;gap:8px 16px}
+  .rows dt{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-top:3px}
+  .rows dd{margin:0}
+  .rows dd.biz{background:var(--ok-soft);padding:8px 12px;border-radius:8px}
+  .rows dd.biz ul{margin:0;padding-left:20px}
+  .rows dd.biz li{margin:2px 0}
+  .rows dd.stop,.rows dd.need{background:var(--warn-soft);padding:8px 12px;border-radius:8px}
+  .rows dd.stop ul,.rows dd.need ul{margin:0;padding-left:20px}
+  .rows dd.stop li,.rows dd.need li{margin:2px 0}
+  .say{border-left:3px solid var(--accent);padding-left:12px;font-style:italic}
+  .rows dd.sum{border-left:3px solid var(--accent);padding-left:12px;font-weight:600}
+  .demo ol{margin:0;padding-left:20px}
+  .badge{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--code);color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:15px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--code);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+  .tablewrap{overflow-x:auto}
+  .doclink{color:var(--accent);font-weight:600}
+  .hidden{display:none !important}
+  footer{margin-top:60px;color:var(--muted);font-size:14px}
+  @media (max-width:640px){ .rows{grid-template-columns:1fr} .rows dt{padding-top:8px} }
+  @media print{ .toolbar{display:none} body{background:#fff} .card,.box{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Lesson one &middot; Topic 1 of 9</div>
+  <h1>Slash commands: the control panel of Claude Code</h1>
+  <p class="lede">A teaching guide for you, the instructor. For every command: what it does, why a business person cares, how to demo it live, and a sentence you can say out loud to beginners.</p>
+  <p><a class="doclink" href="https://code.claude.com/docs/en/commands" target="_blank" rel="noopener">Official Anthropic docs: the full list of Claude Code commands &#8599;</a></p>
+</header>
+
+<section>
+  <h2 style="margin-top:8px">1. The big idea (teach this first)</h2>
+  <div class="grid3">
+    <div class="box">
+      <h3>A prompt vs. a command</h3>
+      <p>A <b>prompt</b> is what you ask Claude to <i>do</i> ("summarize this report"). A <b>slash command</b> is what you tell the <i>tool</i> itself ("start over", "show me the cost", "switch model"). Anything starting with <code>/</code> is for the tool.</p>
+      <p class="say">"Prompts talk to Claude. Slash commands talk to the app. Think of the buttons on a remote control."</p>
+    </div>
+    <div class="box">
+      <h3>What is a token?</h3>
+      <p>Claude reads and writes in small pieces of text called <b>tokens</b> (roughly &frac34; of a word in English). Tokens are what you pay for and what limits how much Claude can hold in its head at once.</p>
+      <p class="say">"Tokens are the fuel. Longer conversation, more fuel burned, higher bill."</p>
+    </div>
+    <div class="box">
+      <h3>What is "context"?</h3>
+      <p>The <b>context window</b> is Claude's working memory for this conversation: your messages, files it read, its own answers. When it fills up, quality drops and cost grows.</p>
+      <p class="say">"Context is the size of Claude's desk. A cluttered desk means slower and sloppier work."</p>
+    </div>
+  </div>
+
+  <div class="box tip">
+    <h3>The one trick that makes everything easy</h3>
+    <p>Type just <code>/</code> in Claude Code and a menu of every command appears. Keep typing letters to filter it, use the arrow keys, press Enter. Nobody has to memorize anything. Show this in the first two minutes.</p>
+  </div>
+
+  <div class="box warn">
+    <h3>Check before class</h3>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>This list comes from the official Claude Code documentation page on commands, read on the day this guide was written. Commands change often and some depend on your <b>plan, version and platform</b>. I did not run each one myself, so type <code>/</code> on the classroom machine and tick off what you see.</li>
+      <li>The <b>demo folder</b> is ready: <code>lesson-one/demo-folder/</code>. Send it to students before class, for example as a zip file.</li>
+      <li>Do a dry run of the demos marked <span class="badge">live demo</span> once, so there are no surprises in front of students.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>2. Suggested flow for the class</h2>
+  <p class="tier-intro">Total of about 45 to 60 minutes for this topic. Shrink or stretch the middle sections to fit your slot. Beginners should leave remembering about 8 commands, not 30.</p>
+  <ol class="flow">
+    <li><b>Show the menu</b> (3 min). Type <code>/</code>, scroll, filter with <code>/mo</code>. "You never need to memorize."</li>
+    <li><b>Tier 1: Survival kit</b> (20 min). <code>/help</code>, <code>/clear</code>, <code>/context</code>, <code>/usage</code>, <code>/compact</code>, <code>/model</code>, <code>/resume</code>. Do these live, all of them.</li>
+    <li><b>Tier 2: Work smarter</b> (10 min). Pick 3: <code>/init</code>, <code>/plan</code>, <code>/rewind</code>. Mention the rest.</li>
+    <li><b>Tier 3: Control and safety</b> (5 min). <code>/permissions</code> is the one managers care about.</li>
+    <li><b>Tier 4: Business power commands</b> (10 min). Pick 1 or 2 for a wow moment: <code>/deep-research</code>, <code>/slides</code>, <code>/loop</code>.</li>
+    <li><b>Tier 5: Teaser</b> (2 min). <code>/skills</code>, <code>/plugin</code>, <code>/mcp</code> are the next topics in this lesson.</li>
+    <li><b>Mini exercise</b> (10 min). See section 5.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>3. The commands</h2>
+  <p class="tier-intro">Each card has: <b>What it does</b>, <b>Business angle</b>, <b>Demo</b> (steps you do yourself), and <b>Summary</b>. Commands that keep running also get <b>How to stop it</b>.</p>
+  <p class="tier-intro">Claude Code itself needs a paid plan (Pro, Max, Ultra, Team or Enterprise) or an API account. A <span class="req">yellow tag</span> next to a command means it needs something extra.</p>
+
+  <div class="box tip">
+    <h3>Before the demos: get the practice files</h3>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>The demos use a folder called <code>demo-folder</code>, from your instructor.</li>
+      <li>It holds three practice files about a made-up office-supplies company.</li>
+      <li><code>customer-feedback.txt</code>: 15 customer comments from October.</li>
+      <li><code>sales.csv</code>: monthly sales for three products, with last year's numbers.</li>
+      <li><code>meeting-notes.txt</code>: notes from the company's weekly team meeting.</li>
+      <li>Save the folder on your computer, then open Claude Code inside it.</li>
+    </ul>
+  </div>
+
+  <div class="toolbar" role="search">
+    <input id="q" type="search" placeholder="Search a command, e.g. cost, memory, undo..." aria-label="Search commands">
+    <div id="filters" role="group" aria-label="Filter by tier"></div>
+  </div>
+
+  <div id="cards"></div>
+</section>
+
+<section>
+  <h2>4. Developer commands you can safely skip</h2>
+  <p class="tier-intro">These appear in the menu and students will ask. A one-line answer is enough: "That one is for software developers reviewing code."</p>
+  <div class="box">
+    <p><code>/code-review</code> (alias <code>/review</code>), <code>/security-review</code>, <code>/simplify</code>, <code>/diff</code>, <code>/batch</code>, <code>/install-github-app</code>, <code>/ide</code>, <code>/terminal-setup</code>, <code>/vim</code> (removed in newer versions), <code>/sandbox</code>, <code>/hooks</code>.</p>
+    <p style="margin:0;color:var(--muted)">Exception: if your students are technical, <code>/code-review</code> and <code>/security-review</code> make a nice bonus.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Mini exercise for students (10 minutes)</h2>
+  <div class="box">
+    <p><b>"Run a small job, then manage it like a pro."</b> Each student does the steps in order:</p>
+    <ol>
+      <li>Open Claude Code in the demo folder. Type <code>/</code> and find three commands they like.</li>
+      <li>Ask Claude: <i>"Read customer-feedback.txt and give me the top 3 complaints."</i></li>
+      <li>Run <code>/context</code>. Write down how many tokens were used.</li>
+      <li>Run <code>/usage</code>. Write down what it says about cost or limits.</li>
+      <li>Run <code>/rename feedback-analysis</code>, then <code>/clear</code>, then <code>/resume</code> and get the old work back.</li>
+      <li>Run <code>/model</code> and look at the options. Discuss: when would you pick the cheaper, faster one?</li>
+    </ol>
+    <p style="margin:0"><b>Debrief question:</b> "If you gave this tool to ten employees, which three commands would you want every one of them to know, and why?"</p>
+  </div>
+</section>
+
+<section>
+  <h2>6. Cheat sheet (printable)</h2>
+  <p class="tier-intro">Everything on one page. Use your browser's Print to give it to students as a handout.</p>
+  <div class="tablewrap"><table id="cheat"><thead><tr><th>Command</th><th>In one line</th><th>Tier</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<footer>
+  Source: <a class="doclink" href="https://code.claude.com/docs/en/commands" target="_blank" rel="noopener">official Claude Code documentation (commands page)</a>. Re-check it before each course run, because commands are added, renamed and removed regularly.
+</footer>
+</div>
+
+<script>
+const TIERS = {
+  1: {name:"1. Survival kit", intro:"Teach all of these. They are the most popular, easy to demo, and they cover cost, memory and getting unstuck."},
+  2: {name:"2. Work smarter", intro:"Habits that make Claude's output better and safer. Pick two or three live and mention the others."},
+  3: {name:"3. Control and safety", intro:"The commands managers and IT ask about. Short, but important for trust."},
+  4: {name:"4. Business power", intro:"Commands that produce something a business person recognizes: a report, a deck, an automated routine."},
+  5: {name:"5. Teaser for the next topics", intro:"Just show they exist. Each one is a full topic later in this lesson."}
+};
+
+const CMDS = [
+/* ---------------- TIER 1 ---------------- */
+{t:1, cmd:"/help", alias:"",
+ what:["Opens help: a help screen or Anthropic's help website, depending on your app.","To see every command, type just <code>/</code>."],
+ biz:["Employees learn the tool by themselves.","No need to call IT."],
+ demo:["Type <code>/help</code>. It may open the help website.","Now type just <code>/</code>.","<b>Observe:</b> a menu of every command.","Type <code>/mo</code>.","<b>Observe:</b> the menu shrinks to <code>/model</code>."],
+ summary:"Lost? Type <code>/</code> and pick from the menu."},
+
+{t:1, cmd:"/clear", alias:"also: /reset, /new",
+ what:["Starts a brand-new conversation with an empty memory.","The old one is kept, and <code>/resume</code> brings it back."],
+ biz:["One task, one conversation.","Stops client A's data mixing with client B's.","Keeps cost from growing."],
+ demo:["Ask: <i>\"Summarize customer-feedback.txt.\"</i>","Run <code>/clear</code>.","Ask: <i>\"What file were we talking about?\"</i>","<b>Observe:</b> Claude has no idea. That is the point.","Run <code>/resume</code>. The old chat is still there."],
+ summary:"Finished a task? Clear. A fresh folder for the next client."},
+
+{t:1, cmd:"/context", alias:"",
+ what:["Shows how full Claude's working memory is, as a colored grid.","It also suggests ways to free up space."],
+ biz:["<b>This is your token-counting command.</b>","Shows what eats the budget.","Long chats and big files cost more."],
+ demo:["Run <code>/context</code> right after starting.","Ask Claude to read <code>sales.csv</code>.","Run <code>/context</code> again.","<b>Observe:</b> more of the grid is used now."],
+ summary:"A photo of Claude's desk. Full desk? Time to clean up."},
+
+{t:1, cmd:"/usage", alias:"also: /cost, /stats",
+ what:["Shows what this session cost, your plan limits, and activity statistics."],
+ biz:["<b>Budgeting:</b> see what a task cost.","See how close you are to limits.","Depends on your plan: subscription or pay-per-use.","Check it on your own machine first."],
+ demo:["Run <code>/usage</code>. Note the numbers.","Ask Claude to analyze <code>sales.csv</code>.","Run <code>/usage</code> again.","<b>Observe:</b> how much did the numbers change?"],
+ summary:"Your fuel gauge. Watch it like a taxi meter."},
+
+{t:1, cmd:"/compact", alias:"",
+ what:["Summarizes the conversation so far to free up memory space.","You continue the same task without starting over.","You can add instructions on what to keep."],
+ biz:["Cuts cost on long projects.","Keeps quality high.","Better than /clear when you need the story."],
+ demo:["Have a short chat about <code>customer-feedback.txt</code>.","Run <code>/context</code>. Note the usage.","Run <code>/compact keep the 3 main complaints</code>.","Run <code>/context</code> again.","<b>Observe:</b> usage dropped. The key points remain."],
+ summary:"Clear throws the notebook away. Compact makes it one page."},
+
+{t:1, cmd:"/model", alias:"",
+ what:["Chooses which Claude model you work with.","Typed alone, it opens a list to pick from."],
+ biz:["Speed vs. quality vs. cost.","Small, fast models for simple routine work.","Strongest model for hard or important work."],
+ demo:["Run <code>/model</code>.","<b>Observe:</b> the list of models.","Pick a lighter one.","Ask it to rewrite one short email.","Note: your choice may become your default."],
+ summary:"Don't send a senior partner to photocopy. Match model to job."},
+
+{t:1, cmd:"/resume", alias:"also: /continue",
+ what:["Reopens an earlier conversation, by name or from a list."],
+ biz:["Multi-day work never needs re-explaining.","Think: monthly report, negotiation, ongoing analysis."],
+ demo:["Run <code>/rename sales-analysis</code>.","Run <code>/clear</code>.","Run <code>/resume</code> and pick <code>sales-analysis</code>.","<b>Observe:</b> you continue where you stopped."],
+ summary:"Name your chats. Pull them out of the drawer anytime."},
+
+/* ---------------- TIER 2 ---------------- */
+{t:2, cmd:"/init", alias:"",
+ what:["Creates a starter <code>CLAUDE.md</code> file with notes about your project.","Claude reads this file at the start of every session."],
+ biz:["<b>Company knowledge, written once.</b>","Brand voice, customer types, formatting rules.","Rules about what Claude must never do.","Every employee's Claude behaves consistently."],
+ demo:["Run <code>/init</code> in the demo folder.","Open the new <code>CLAUDE.md</code> file.","<b>Observe:</b> Claude wrote notes about your folder.","Add one rule: <i>\"Always answer in plain language.\"</i>"],
+ summary:"The onboarding document for your new AI employee."},
+
+{t:2, cmd:"/memory", alias:"",
+ what:["Opens a menu to manage what Claude remembers.","<code>CLAUDE.md</code> is a text file of rules you write for Claude.","Claude reads it at the start of every conversation.","The menu lists these files so you can open and edit them.","It also turns auto memory on or off: notes Claude saves itself."],
+ biz:["People see what Claude knows about them.","They can correct it.","Transparency and control."],
+ demo:["Run <code>/init</code> first, if you haven't yet.","Run <code>/memory</code>. Pick the project CLAUDE.md.","Add: <i>Always answer in short bullet points.</i> Save it.","Run <code>/clear</code>, then ask any question.","<b>Observe:</b> Claude follows your new rule."],
+ summary:"CLAUDE.md is the notebook. /memory is the shelf it sits on."},
+
+{t:2, cmd:"/plan", alias:"",
+ what:["Switches to plan mode: Claude explains its plan before changing anything.","Nothing changes until you approve.","You can add a task: <code>/plan reorganize these files by client</code>"],
+ biz:["<b>Human approves before Claude acts.</b>","Safest habit for important work.","Use it when many files change."],
+ demo:["Run <code>/plan organize the demo folder by topic</code>.","Read the plan. Ask to change one step.","Approve it.","<b>Observe:</b> nothing changed until you approved."],
+ summary:"Measure twice, cut once. You sign off first."},
+
+{t:2, cmd:"/rewind", alias:"also: /undo, /checkpoint",
+ what:["Goes back to an earlier point in your work.","It can undo the conversation, Claude's file changes, or both."],
+ biz:["A safety net for mistakes.","Less fear of trying things.","Faster adoption."],
+ demo:["Ask Claude to rewrite <code>meeting-notes.txt</code> as a poem.","Open the file. See the change.","Run <code>/rewind</code>. Restore the earlier point.","<b>Observe:</b> the original file is back."],
+ summary:"Ctrl+Z for the whole project. Experiment freely."},
+
+{t:2, cmd:"/copy", alias:"",
+ what:["Copies Claude's last answer to your clipboard.","<code>/copy 2</code> copies the answer before that."],
+ biz:["Fastest path from answer to email.","Also works for Word, Slack and CRM notes."],
+ demo:["Ask Claude for a short customer email.","Run <code>/copy</code>.","Paste it into an email draft.","<b>Observe:</b> the full answer, ready to send."],
+ summary:"Great answer? One command, and it is in your email."},
+
+{t:2, cmd:"/export", alias:"",
+ what:["Saves the whole conversation as a plain text file."],
+ biz:["Keep a record of what was asked.","An audit trail for the project.","Attach it to a project file."],
+ demo:["Run <code>/export my-session.txt</code>.","Open the new file.","<b>Observe:</b> your whole conversation, saved."],
+ summary:"The meeting minutes between you and Claude."},
+
+{t:2, cmd:"/btw", alias:"",
+ what:["Asks a quick side question without adding it to the conversation."],
+ biz:["Quick lookups without cluttering the chat.","Less clutter means lower cost later."],
+ demo:["Start a task, e.g. analyze <code>sales.csv</code>.","Run <code>/btw what does YoY mean?</code>","<b>Observe:</b> you get a quick answer.","Continue the main task. The chat stays clean."],
+ summary:"A quick question over the shoulder, then back to work."},
+
+{t:2, cmd:"/effort", alias:"",
+ what:["Sets how hard Claude thinks: low, up to max, or auto.","<code>/effort status</code> shows the current level."],
+ biz:["Another cost and speed dial.","Low effort for simple formatting.","High effort for strategy and tricky analysis."],
+ demo:["Run <code>/effort</code>. See the levels.","Pick low. Ask a tricky question.","Pick high. Ask the same question.","<b>Observe:</b> compare the speed and the depth."],
+ summary:"A quick glance or a careful study. You choose."},
+
+{t:2, cmd:"/advisor", alias:"", req:"Experimental. Newer version required",
+ what:["Gives Claude a second, stronger model to ask for advice.","Claude decides when to ask: before a plan, when stuck, before finishing.","Typed alone it opens a picker. <code>/advisor opus</code> sets it directly."],
+ biz:["An independent second opinion on important work.","Cheaper than running the strongest model all the time.","It costs extra: every consultation uses more tokens."],
+ needs:["Claude Code version 2.1.260 or later.","Anthropic's own service. Not Amazon Bedrock, Google Cloud's Agent Platform or Microsoft Foundry.","The advisor must be as strong as your main model, or stronger."],
+ demo:["Run <code>/advisor</code>.","<b>Observe:</b> a picker of advisor models. No picker? Type <code>/advisor opus</code>.","Pick one. A message says the advisor is set.","Ask: <i>\"Plan how to fix the late deliveries, using meeting-notes.txt. Consult the advisor before you answer.\"</i>","<b>Observe:</b> an <b>Advising</b> line appears. Press <code>Ctrl+O</code> to read the advice.","Run <code>/advisor off</code> when you are done."],
+ stop:["Run <code>/advisor off</code>.","Your choice is saved, so it stays on in later sessions until you do."],
+ summary:"A junior colleague who calls the senior partner at the key moments."},
+
+/* ---------------- TIER 3 ---------------- */
+{t:3, cmd:"/permissions", alias:"also: /allowed-tools",
+ what:["Controls what Claude may do alone, must ask about, or may never do."],
+ biz:["<b>Governance and risk control.</b>","Show this one to IT and legal.","Block risky actions company-wide.","Allow safe routine ones, fewer prompts."],
+ demo:["Run <code>/permissions</code>.","<b>Observe:</b> three lists: allow, ask, deny.","Ask Claude to create a new file.","<b>Observe:</b> Claude asks your permission first."],
+ summary:"You decide which doors your AI employee has keys to."},
+
+{t:3, cmd:"/config", alias:"also: /settings",
+ what:["Opens settings, such as theme and model.","You can also change one directly: <code>/config theme=dark</code>"],
+ biz:["Standardize settings across the team."],
+ demo:["Run <code>/config</code>.","Scroll the options.","<b>Observe:</b> theme, model and more, in one place."],
+ summary:"The settings page. Nothing here is permanent."},
+
+{t:3, cmd:"/status", alias:"",
+ what:["Shows your version, current model, account and connection status."],
+ biz:["First check when something breaks.","Easy to read out to IT support."],
+ demo:["Run <code>/status</code>.","<b>Observe:</b> version, model and account.","Find which account you are using."],
+ summary:"Your session's ID card. Read it out to IT."},
+
+{t:3, cmd:"/login and /logout", alias:"",
+ what:["Signs you in to, or out of, your Anthropic account."],
+ biz:["Shared computers: log out when finished.","The next person must not use your account."],
+ demo:["Run <code>/status</code>. See which account is signed in.","<b>Don't log out in class.</b>","On a shared computer, run <code>/logout</code> when done."],
+ summary:"On a shared computer, always log out. Just like email."},
+
+{t:3, cmd:"/doctor", alias:"also: /checkup",
+ what:["Checks your installation, settings and setup for problems.","It offers fixes and applies them only after you confirm."],
+ biz:["First aid before calling IT.","Fewer support tickets."],
+ demo:["Run <code>/doctor</code>.","Read the result.","<b>Observe:</b> any problems, with suggested fixes.","Fixes apply only after you confirm."],
+ summary:"Something odd? Ask the doctor before calling IT."},
+
+/* ---------------- TIER 4 ---------------- */
+{t:4, cmd:"/deep-research", alias:"",
+ what:["Runs many web searches at once and writes a report with sources.","Example: <code>/deep-research how are European retailers using AI?</code>"],
+ biz:["Market, competitor and supplier research.","Minutes instead of days.","Comes with sources to check."],
+ demo:["Pick a topic from your own industry.","Run <code>/deep-research</code> with your question.","Wait a few minutes. It reads many websites.","<b>Observe:</b> a report with sources.","Open one source. Check it yourself."],
+ summary:"A research assistant who reads fifty websites. You still verify."},
+
+{t:4, cmd:"/slides", alias:"", req:"Not on every account",
+ what:["Creates a presentation from a short brief.","Example: <code>/slides 5-slide Q3 sales update for the board</code>"],
+ biz:["First-draft decks in minutes.","Pitches, updates and trainings.","Humans polish the result."],
+ demo:["Run <code>/slides 5-slide summary of customer-feedback.txt</code>.","<b>Observe:</b> a first-draft deck.","Ask for one change in plain words.","Not working? Your version may not have it."],
+ summary:"You bring the story. Claude drafts the slides."},
+
+{t:4, cmd:"/dataviz", alias:"",
+ what:["Gives Claude design guidance for charts, graphs and dashboards.","Use it when you ask Claude to visualize data."],
+ biz:["Turns a spreadsheet into a clear chart.","Readable numbers for management."],
+ demo:["Run <code>/dataviz make a chart of monthly sales from sales.csv</code>.","<b>Observe:</b> a clear, readable chart.","Compare: ask for a chart without <code>/dataviz</code>."],
+ summary:"A designer who makes your numbers readable."},
+
+{t:4, cmd:"/loop", alias:"",
+ what:["Repeats a prompt on a timer while your session stays open.","Example: <code>/loop 5m check for new files in the folder</code>"],
+ biz:["First taste of <b>automation</b>.","Monitoring, regular checks, recurring summaries."],
+ demo:["Run <code>/loop 2m list any new files in this folder</code>.","Add a new file to the folder.","<b>Observe:</b> Claude notices it within 2 minutes.","Type <code>stop the loop</code>. Esc will not stop it.","Ask <code>what loops are running?</code> to confirm."],
+ stop:["<b>Timed loop</b> (<code>/loop 2m ...</code>): Esc will not stop it.","Type <code>stop the loop</code>. Claude cancels it.","<b>Loop with no time</b>: press Esc while it waits.","Not sure? Ask <code>what loops are running?</code>","Closing Claude Code also stops it.","Resuming that session can restart timed loops.","Forgotten loops end by themselves after 7 days."],
+ summary:"Someone checking the mailbox every few minutes. Until you say stop."},
+
+{t:4, cmd:"/schedule", alias:"also: /routines", req:"Subscription + GitHub required",
+ what:["Sets up a task that runs in Anthropic's cloud on a timer.","It keeps running even when your laptop is closed.","Claude asks you questions to set it up.","Example: <code>/schedule every Monday at 8am, summarize last week's changes</code>"],
+ biz:["Weekly reports without anyone remembering.","Recurring summaries and regular checks.","Runs even when your computer is off."],
+ needs:["A paid plan: Pro, Max, Ultra, Team or Enterprise.","Signed in with claude.ai, not an API key.","Your files on GitHub. It cannot see your laptop.","Runs at most once per hour."],
+ demo:["Type <code>/</code>. Is <code>schedule</code> in the menu?","Missing? Run <code>/login</code> with your claude.ai account.","Type a full request, not just <code>/schedule</code>.","Answer Claude's questions: when, which repository, what to do.","<b>Observe:</b> your task at <code>claude.ai/code/routines</code>.","No GitHub repository? You cannot try it yet."],
+ stop:["Pause or delete it at <code>claude.ai/code/routines</code>.","See all your tasks: <code>/schedule list</code>."],
+ summary:"/loop needs your laptop open. /schedule does not."},
+
+{t:4, cmd:"/insights", alias:"",
+ what:["Creates an HTML report about your recent Claude Code sessions on this computer."],
+ biz:["See how the tool is really used.","Starts the talk: where is our value?"],
+ demo:["Do some work in Claude Code first.","Run <code>/insights</code>.","Open the HTML report it creates.","<b>Observe:</b> what you really used Claude for."],
+ summary:"A mirror: what did we actually use this for?"},
+
+{t:4, cmd:"/team-onboarding", alias:"", req:"Sharing: Team or Enterprise plan",
+ what:["Writes an onboarding guide for new team members.","It is based on how your team used Claude Code in the last 30 days."],
+ biz:["Helps scale adoption across the team.","New colleagues learn how you really work."],
+ demo:["This needs 30 days of real team use.","Skip it in class.","Try it at work next month."],
+ summary:"A \"how we do it here\" guide, from your history."},
+
+{t:4, cmd:"/goal", alias:"",
+ what:["Sets a goal Claude keeps working toward over several turns, until done.","<code>/goal clear</code> removes the goal."],
+ biz:["From &quot;answer one question&quot; to &quot;finish the job&quot;."],
+ demo:["Run <code>/goal one-page summary of customer-feedback.txt with top 3 issues</code>.","Don't type anything else.","<b>Observe:</b> Claude keeps working until the goal is met.","Run <code>/goal clear</code> when done."],
+ summary:"Don't direct every step. State the outcome you want."},
+
+/* ---------------- TIER 5 ---------------- */
+{t:5, cmd:"/skills", alias:"",
+ what:["Lists your skills: reusable instruction packages.","Skills and commands both start with <code>/</code>, so commands like <code>/clear</code> can appear too.","Type to filter, or press <code>t</code> to sort by token cost."],
+ biz:["Skills capture how your company does tasks.","Example: your weekly report format.","Anyone can then repeat it."],
+ demo:["Run <code>/skills</code>.","<b>Observe:</b> skills, plus some commands like <code>/clear</code>.","Type a word to filter the list.","Press <code>t</code> to sort by token cost.","Avoid Space here. It hides or shows skills.","Press Esc to close."],
+ summary:"Recipes for repeat work. Next topics: finding and building them."},
+
+{t:5, cmd:"/plugin", alias:"",
+ what:["Manages plugins: add-on bundles of skills, commands and connections.","You can list, install, enable and disable them."],
+ biz:["Install ready-made capabilities.","No need to build them yourself."],
+ demo:["Run <code>/plugin</code>.","Look around.","<b>Don't install anything yet.</b>"],
+ summary:"An app store for Claude. Coming in a later topic."},
+
+{t:5, cmd:"/mcp", alias:"",
+ what:["Manages connections to outside systems, such as business apps and data sources.","These connections are called MCP servers."],
+ biz:["How Claude connects to company tools.","Documents, CRM, calendar and more.","Covered later in topic 9: Connectors."],
+ demo:["Run <code>/mcp</code>.","<b>Observe:</b> the list of connections. Probably empty."],
+ summary:"The cables that plug Claude into your company's tools."},
+
+{t:5, cmd:"/skill-doctor", alias:"", req:"Newer version required",
+ what:["Shows how much memory each skill uses and how often it runs."],
+ biz:["Keeps your skill library lean.","A leaner library costs less.","Connects to topic 5: skill evaluation."],
+ demo:["Run <code>/skill-doctor</code>.","Not there? Your version does not have it yet.","<b>Observe:</b> which skills cost a lot, and which get used."],
+ summary:"Which recipes do we cook? Which just take shelf space?"}
+];
+
+const state = {tier:0, q:""};
+const filtersEl = document.getElementById("filters");
+const cardsEl = document.getElementById("cards");
+const qEl = document.getElementById("q");
+
+function mkFilters(){
+  const all = [[0,"All"]].concat(Object.keys(TIERS).map(k=>[+k, TIERS[k].name]));
+  filtersEl.innerHTML = "";
+  all.forEach(([k,label])=>{
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = label;
+    b.setAttribute("aria-pressed", String(state.tier===k));
+    b.onclick = ()=>{ state.tier = k; mkFilters(); render(); };
+    filtersEl.appendChild(b);
+  });
+}
+
+function cardHTML(c){
+  const demo = c.demo.length>1 ? "<ol>"+c.demo.map(d=>"<li>"+d+"</li>").join("")+"</ol>" : c.demo[0];
+  return `<article class="card" id="${c.cmd.replace(/[^a-z]/gi,"")}">
+    <div class="card-head"><span class="cmd">${c.cmd}</span>${c.alias?`<span class="alias">${c.alias}</span>`:""}${c.req?`<span class="req">${c.req}</span>`:""}</div>
+    <p class="oneliner">${c.what.map(s=>"<span>"+s+"</span>").join("")}</p>
+    <dl class="rows">
+      <dt>Business angle</dt><dd class="biz"><ul>${c.biz.map(b=>"<li>"+b+"</li>").join("")}</ul></dd>
+      ${c.needs?`<dt>Needs</dt><dd class="need"><ul>${c.needs.map(s=>"<li>"+s+"</li>").join("")}</ul></dd>`:""}
+      <dt>Demo</dt><dd class="demo">${demo}</dd>
+      ${c.stop?`<dt>How to stop it</dt><dd class="stop"><ul>${c.stop.map(s=>"<li>"+s+"</li>").join("")}</ul></dd>`:""}
+      <dt>Summary</dt><dd class="sum">${c.summary}</dd>
+    </dl></article>`;
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  let html = "";
+  Object.keys(TIERS).forEach(k=>{
+    if(state.tier && state.tier!==+k) return;
+    const items = CMDS.filter(c=>c.t===+k && (!q || (c.cmd+" "+c.alias+" "+(c.req||"")+" "+c.what.join(" ")+" "+c.biz.join(" ")).toLowerCase().replace(/<[^>]+>/g,"").includes(q)));
+    if(!items.length) return;
+    html += `<h3 style="margin:32px 0 4px;font-size:22px">${TIERS[k].name}</h3><p class="tier-intro">${TIERS[k].intro}</p>`;
+    html += items.map(cardHTML).join("");
+  });
+  cardsEl.innerHTML = html || `<p class="tier-intro">No command matches that search.</p>`;
+}
+
+function cheat(){
+  const tb = document.querySelector("#cheat tbody");
+  tb.innerHTML = CMDS.map(c=>`<tr><td><code>${c.cmd}</code>${c.req?` <span class="req">${c.req}</span>`:""}</td><td>${c.what[0]}</td><td>${c.t}</td></tr>`).join("");
+}
+
+qEl.addEventListener("input", e=>{ state.q = e.target.value; render(); });
+mkFilters(); render(); cheat();
+</script>
+</body>
+</html>

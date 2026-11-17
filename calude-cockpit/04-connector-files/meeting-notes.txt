@@ -1,0 +1,36 @@
+Greenleaf Office Supplies - Weekly team meeting
+Date: Monday, 2 November 2026
+(Fictional practice data for the Claude Code course.)
+
+Attendees: Ronit (CEO), Avi (operations), Galit (customer service), Ben (sales)
+
+1. October sales
+Ben: chair sales were strong, up compared to last October. Paper sales were flat.
+Ben thinks the new bulk discount helped with chairs.
+
+2. Late deliveries
+Avi: our delivery partner was short on drivers for most of October.
+About one in four orders arrived late.
+Galit: late deliveries are the top reason customers contact us right now.
+Ronit: this is now our biggest risk. Two business customers have said they may leave.
+
+3. Wrong items in orders
+Galit: several customers got the wrong model or colour.
+Avi thinks the cause is two products with very similar codes in the warehouse system.
+
+4. Customer service response times
+Galit: email replies take up to four days. The team is two people for about 300 messages a week.
+Idea: ready-made answers for the ten most common questions.
+
+Decisions
+- Avi will meet a second delivery company this week.
+- Galit will draft ready-made answers for the most common questions.
+- Ben will pause the paper promotion until deliveries are on time again.
+
+Action items
+- Avi: report on the second delivery company by 9 November.
+- Galit: first ten ready-made answers by 12 November.
+- Avi: rename the two similar product codes in the warehouse system.
+- Ronit: call the two unhappy business customers this week.
+
+Next meeting: Monday, 9 November 2026

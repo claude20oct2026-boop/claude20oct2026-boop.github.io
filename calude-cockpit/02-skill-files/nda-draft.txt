@@ -1,0 +1,31 @@
+MUTUAL NON-DISCLOSURE AGREEMENT (DRAFT, received from Orbit Systems)
+(Fictional practice document for the Claude Code course. Not a real contract.)
+
+Parties: Orbit Systems Ltd. ("Orbit") and Greenleaf Office Supplies Ltd. ("Greenleaf").
+
+1. Purpose. The parties wish to discuss a possible supply agreement for office furniture.
+
+2. Confidential Information. Any information shared by Orbit, in any form, is Confidential Information.
+   Information shared by Greenleaf is Confidential Information only if it is marked "Confidential" in writing.
+
+3. Term. This agreement lasts ten (10) years and renews automatically for further five-year periods
+   unless Orbit gives written notice.
+
+4. Non-solicitation. For five (5) years, Greenleaf will not hire or contact any Orbit employee,
+   customer or supplier.
+
+5. Feedback and ideas. Any idea, suggestion or feedback Greenleaf gives Orbit becomes Orbit's property,
+   without payment.
+
+6. Liability. Greenleaf is liable for all damages caused by any breach, with no limit.
+   Orbit's liability is limited to one hundred US dollars ($100).
+
+7. Return of information. On request, Greenleaf must return or destroy all Confidential Information
+   within 24 hours.
+
+8. Governing law. This agreement is governed by the laws of the Cayman Islands. Disputes will be
+   heard only in the courts of the Cayman Islands.
+
+9. Entire agreement. This document replaces all earlier discussions between the parties.
+
+Signed: ____________________ (Orbit)      ____________________ (Greenleaf)

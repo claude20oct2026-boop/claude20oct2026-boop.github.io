@@ -1,0 +1,20 @@
+Greenleaf Office Supplies - Customer questions and answers
+(Fictional practice data for the Claude Code course.)
+
+How long does delivery take?
+Standard delivery takes 2 to 4 business days. Express delivery takes 1 business day and costs $12.
+
+What if my order is late?
+Call or email us with your order number. If it is more than 3 days late, we refund the delivery fee.
+
+I received the wrong item. What do I do?
+Keep it in the box. We send the right item and collect the wrong one for free, within 5 business days.
+
+Can I return something?
+Yes, within 30 days, unopened. Chairs can be returned within 14 days, even if you assembled them.
+
+Do you have bulk discounts?
+Yes. 10% off orders of 10 chairs or more, and 15% off 50 boxes of paper or more.
+
+When can I reach you?
+Sunday to Thursday, 8:00 to 17:00. Phone: 03-555-0199. Email: service@greenleaf.example
